@@ -1,0 +1,23 @@
+{
+  "name": "clitest",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "index": "node index.js",
+    "nodemon": "nodemon index.js",
+    "argv": "node argv"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "dotenv": "^16.5.0",
+    "yargs": "^17.7.2"
+  }
+}

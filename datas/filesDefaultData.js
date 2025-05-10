@@ -1,0 +1,113 @@
+module.exports = {
+  html: {
+    content: `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <h1>Hello World</h1>
+  
+</body>
+</html>`,
+  },
+  css: {
+    content: `
+    /* リセットCSS */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* HTMLとBody */
+html {
+  scroll-behavior: smooth;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "Noto Sans JP";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* 見出し要素 */
+h1, h2, h3, h4,
+p, figure,
+blockquote,
+dl, dd {
+  margin: 0;
+}
+
+h1 {
+  font-size: 36px;
+}
+
+h3 {
+  font-size: 20px;
+}
+
+/* リスト要素 */
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+}
+
+/* リンク要素 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* メディア要素 */
+img, picture {
+  max-width: 100%;
+  display: block;
+}
+
+/* フォーム要素 */
+input, button,
+textarea, select {
+  font: inherit;
+}
+
+/* メディアクエリ */
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+@media(prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}`,
+  },
+};
