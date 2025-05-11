@@ -4,110 +4,94 @@ const argv = require("../option.js");
 
 // ファイル生成オリジナル
 const createFs = {
-  
   // ファイルの入力チェック
   checkFileName: (fileName) => {
     console.log("ファイル名のチェックを行います。");
 
-    return new Promise((resolve, reject) => {
-      // ファイル名の入力チェック
-      if (!fileName) {
-        const error = {
-          source: "checkFileName",
-          name: "InvalidFileNameError",
-          message: "ファイル名が未指定、もしくは無効なファイル名です。",
-          actionGuide: "ファイル名を修正してください。",
-        };
-
-        console.error(new Error(error.name));
-
-        reject(error);
-        return;
-      }
-
-      // ファイル名に相対パスが含まれているかをチェックする
-      if (
-        fileName.includes("../") ||
-        fileName.includes("..\\") ||
-        fileName.includes("/") ||
-        fileName.includes("\\")
-      ) {
-        const error = {
-          source: "checkFileName",
-          name: "InvalidFileNameError",
-          message: "ファイル名にパス区切り文字が含まれています。",
-          actionGuide: "ファイル名を修正してください。",
-        };
-
-        console.error(new Error(error.name));
-        reject(error);
-        return;
-      }
-
-      const result = {
-        message: "ファイル名のチェックに成功しました。",
-        fileName: fileName,
+    // ファイル名の入力チェック
+    if (!fileName) {
+      const error = {
+        source: "checkFileName",
+        name: "InvalidFileNameError",
+        message: "ファイル名が未指定、もしくは無効なファイル名です。",
+        actionGuide: "ファイル名を修正してください。",
       };
 
-      resolve(result);
-    });
+      console.error(new Error(error.name));
+
+      throw error;
+    }
+    // ファイル名に相対パスが含まれているかをチェックする
+    else if (
+      fileName.includes("../") ||
+      fileName.includes("..\\") ||
+      fileName.includes("/") ||
+      fileName.includes("\\")
+    ) {
+      const error = {
+        source: "checkFileName",
+        name: "InvalidFileNameError",
+        message: "ファイル名にパス区切り文字が含まれています。",
+        actionGuide: "ファイル名を修正してください。",
+      };
+
+      console.error(new Error(error.name));
+      throw error;
+    } else {
+      return Promise.resolve({
+        // 成功時の処理
+        message: "ファイル名のチェックに成功しました。",
+        fileName: fileName,
+      });
+    }
   },
 
   // ディレクトリの入力チェック
   checkDir: (dir = argv.dir) => {
     console.log("ディレクトリ名のチェックを行います。");
 
-    return new Promise((resolve, reject) => {
-      // dirに空文字列の場合にはエラーを返す
-      if (!dir) {
-        const error = {
-          source: "checkDir",
-          name: "InvalidDirError",
-          message: "ディレクトリ名が未指定、もしくは無効なディレクトリ名です。",
-          actionGuide: "ディレクトリ名を修正してください。",
-        };
-
-        console.error(new Error(error.name));
-        reject(error);
-        return;
-      }
-      // dirに危険な文字列が含まれているかをチェックする
-      if (dir.includes("../") || dir.includes("..\\")) {
-        const error = {
-          source: "checkDir",
-          name: "InvalidDirError",
-          message: "ディレクトリ名に無効なパスが含まれています。",
-          actionGuide: "ディレクトリ名を修正してください。",
-        };
-
-        console.error(new Error(error.name));
-        reject(error);
-        return;
-      }
-
-      const result = {
-        message: "ディレクトリ名のチェックに成功しました。",
-        dir: dir,
+    // dirに空文字列の場合にはエラーを返す
+    if (!dir) {
+      const error = {
+        source: "checkDir",
+        name: "InvalidDirError",
+        message: "ディレクトリ名が未指定、もしくは無効なディレクトリ名です。",
+        actionGuide: "ディレクトリ名を修正してください。",
       };
 
-      resolve(result);
-    });
+      console.error(new Error(error.name));
+      throw error;
+    }
+    // dirに危険な文字列が含まれているかをチェックする
+    else if (dir.includes("../") || dir.includes("..\\")) {
+      const error = {
+        source: "checkDir",
+        name: "InvalidDirError",
+        message: "ディレクトリ名に無効なパスが含まれています。",
+        actionGuide: "ディレクトリ名を修正してください。",
+      };
+
+      console.error(new Error(error.name));
+      throw error;
+    } else {
+      return Promise.resolve({
+        message: "ディレクトリ名のチェックに成功しました。",
+        dir: dir,
+      });
+    }
   },
 
+  // ディレクトリの新規作成
   createDir: (dir) => {
-    return new Promise((resolve, reject) => {
-      // ディレクトリの存在チェック
+    // ディレクトリの存在チェック
+    return (
       fs.promises
         .access(dir)
-        .then(() => {
-          // ディレクトリが存在する場合はそのまま処理を続ける
-
-          const result = {
-            message:
-              "ディレクトリは既に作成されています。このまま処理を続けます。",
-          };
-          resolve(result);
-        })
+        // ディレクトリが存在する場合はそのまま処理を続ける
+        .then(() => ({
+          message:
+            "ディレクトリは既に作成されています。このまま処理を続けます。",
+        }))
         .catch((error) => {
           if (error.code === "ENOENT") {
             // ディレクトリが存在しない場合は新規作成する
@@ -116,14 +100,13 @@ const createFs = {
             // ディレクトリの新規作成
             console.log("作成中...");
 
-            fs.promises
+            return fs.promises
               .mkdir(dir, { recursive: true })
               .then(() => {
                 console.log(`${dir}ディレクトリを新規作成しました。`);
-                const result = {
+                return {
                   message: "ディレクトリ作成に成功しました。",
                 };
-                resolve(result);
               })
               .catch((mkdirError) => {
                 const errorInfo = {
@@ -133,9 +116,8 @@ const createFs = {
                   errorMessage: mkdirError.message,
                   actionGuide: "エラーの詳細を確認してください。",
                 };
-
                 console.error(new Error(errorInfo.name));
-                reject(errorInfo);
+                throw errorInfo;
               });
           } else {
             // その他のエラーが発生した場合
@@ -146,98 +128,86 @@ const createFs = {
               errorMessage: error.message,
               actionGuide: "エラーの詳細を確認してください。",
             };
-
             console.error(new Error(errorInfo.name));
-            reject(errorInfo);
+            throw errorInfo;
           }
-        });
-    });
+        })
+    );
   },
 
   // 拡張子チェックと追加
   addExt: ({ fileName, fileExt }) => {
     console.log("拡張子チェックを行います");
 
-    return new Promise((resolve, reject) => {
-      // 入力値の検証
-      if (!fileName || !fileExt) {
-        const error = {
-          source: "addExt",
-          name: "InvalidInputError",
-          message: "ファイル名または拡張子が未指定、もしくは無効です。",
-          actionGuide: "入力したファイル名と拡張子を確認してください。",
-        };
+    // 入力値の検証
+    if (!fileName || !fileExt) {
+      const error = {
+        source: "addExt",
+        name: "InvalidInputError",
+        message: "ファイル名または拡張子が未指定、もしくは無効です。",
+        actionGuide: "入力したファイル名と拡張子を確認してください。",
+      };
 
-        console.error(new Error(error.name));
-        reject(error);
-        return;
+      console.error(new Error(error.name));
+      throw error;
+    }
+
+    try {
+      // 入力時の拡張子の取得
+      const currentExt = path.extname(fileName);
+      // 目的の拡張子の取得
+      const targetExt = `.${fileExt}`;
+
+      // 拡張子が存在する場合
+      if (currentExt === targetExt) {
+        // そのまま返す
+
+        return Promise.resolve({
+          message: "拡張子は既に指定されています。このまま処理を続けます。",
+          fileName: fileName,
+          fileExt: fileExt,
+        });
       }
+      // 拡張子が存在しない場合
+      else {
+        console.log(`.${fileExt}拡張子が指定されていません。`);
+        console.log(`.${fileExt}拡張子を追加します。`);
 
-      try {
-        // 入力時の拡張子の取得
-        const currentExt = path.extname(fileName);
-        // 目的の拡張子の取得
-        const targetExt = `.${fileExt}`;
+        const addExtFileName = `${fileName}${targetExt}`; // 拡張子を追加
 
-        // 拡張子が存在する場合
-        if (currentExt === targetExt) {
-          // そのまま返す
-
-          const result = {
-            message: "拡張子は既に指定されています。このまま処理を続けます。",
-            fileName: fileName,
-            fileExt: fileExt,
-          };
-          resolve(result);
-        }
-        // 拡張子が存在しない場合
-        else {
-          console.log(`.${fileExt}拡張子が指定されていません。`);
-          console.log(`.${fileExt}拡張子を追加します。`);
-
-          const addExtFileName = `${fileName}${targetExt}`; // 拡張子を追加
-
-          // resultに結果を追加する
-          const result = {
-            message: "拡張子の追加に成功しました。",
-            originalFileName: fileName,
-            fileName: addExtFileName,
-            fileExt: fileExt,
-          };
-
-          resolve(result);
-        }
-      } catch (error) {
-        // その他のエラーが発生した場合
-        const errorInfo = {
-          source: "unknown",
-          name: error.name,
-          message: "拡張子の追加に失敗しました。",
-          errorMessage: error.message,
-          actionGuide: "エラーの詳細を確認してください。",
-        };
-        console.error(new Error(errorInfo.name));
-        reject(errorInfo);
-        return;
+        return Promise.resolve({
+          message: "拡張子の追加に成功しました。",
+          originalFileName: fileName,
+          fileName: addExtFileName,
+          fileExt: fileExt,
+        });
       }
-    });
+    } catch (error) {
+      // その他のエラーが発生した場合
+      const errorInfo = {
+        source: "unknown",
+        name: error.name,
+        message: "拡張子の追加に失敗しました。",
+        errorMessage: error.message,
+        actionGuide: "エラーの詳細を確認してください。",
+      };
+      console.error(new Error(errorInfo.name));
+      throw errorInfo;
+    }
   },
 
   // パスの生成
   createPath: ({ dir = argv.dir, fileName } = {}) => {
-    return new Promise((resolve, reject) => {
       // ファイルの保存先のパスを作成する
       console.log("パスの生成を行います。");
       try {
         // パスの結合
         const pathResult = path.join(dir, fileName);
 
-        const result = {
+        return Promise.resolve({
           message: "パスの生成に成功しました。",
           path: pathResult,
-        };
-
-        resolve(result);
+        });
       } catch (error) {
         const errorInfo = {
           source: "createPath",
@@ -247,29 +217,23 @@ const createFs = {
           actionGuide: "エラーの詳細を確認してください。",
         };
         console.error(new Error(errorInfo.name));
-        reject(errorInfo);
-        return;
+        throw errorInfo;
       }
-    });
+    ;
   },
 
   // ファイルの作成
   createFile: ({ path, fileName, dir = argv.dir, fileContent } = {}) => {
     console.log("ファイルの生成処理を行います。");
-
-    return new Promise((resolve, reject) => {
       // ファイルの存在チェック
-      fs.promises
+      return fs.promises
         .access(path)
         .then(() => {
           // ファイルが存在する場合
-
-          const result = {
+          return {
             message: `${fileName}は既に${dir}内に保存されています。このまま処理を終了します。`,
             fileContent: fileContent,
           };
-
-          resolve(result);
         })
         .catch((error) => {
           if (error.code === "ENOENT") {
@@ -280,17 +244,16 @@ const createFs = {
             console.log("ファイル生成中...");
 
             // ファイルの生成
-            fs.promises
+            return fs.promises
               .writeFile(path, fileContent, {
                 encoding: "utf-8",
               })
               .then(() => {
-                const result = {
+
+                return {
                   message: `${fileName}を${dir}に保存しました。`,
                   fileContent: `${fileContent.slice(0, 50)}...`, // 先頭50文字を表示
                 };
-
-                resolve(result);
               })
               .catch((writeFileError) => {
                 const errorInfo = {
@@ -301,8 +264,7 @@ const createFs = {
                   actionGuide: "エラーの詳細を確認してください。",
                 };
                 console.error(new Error(errorInfo.name));
-                reject(errorInfo);
-                return;
+                throw errorInfo;
               });
           } else {
             // その他のエラーが発生した場合
@@ -314,11 +276,10 @@ const createFs = {
               actionGuide: "エラーの詳細を確認してください。",
             };
             console.error(new Error(errorInfo.name));
-            reject(errorInfo);
-            return;
+            throw errorInfo;
           }
         });
-    });
+    ;
   },
 };
 

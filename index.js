@@ -8,58 +8,58 @@ const argv = require("./option.js");
 
 createFs
   .checkFileName(argv.html)
-  .then((fileResult) => {
-    console.log("ファイル名結果：", fileResult);
+  .then((result) => {
+    console.log("ファイル名結果：", result);
     return createFs.checkDir().then((dirResult) => ({
-      ...fileResult,
+      ...result,
       ...dirResult,
     }));
   })
-  .then((firstMergeResult) => {
-    console.log("結果", firstMergeResult);
+  .then((result) => {
+    console.log("結果", result);
     return createFs.createDir(argv.dir).then((dirCreateResult) => ({
-      ...firstMergeResult,
+      ...result,
       ...dirCreateResult,
     }));
   })
-  .then((secondMergeResult) => {
-    console.log("結果：", secondMergeResult);
+  .then((result) => {
+    console.log("結果：", result);
     return createFs
       .addExt({
-        fileName: secondMergeResult.fileName,
+        fileName: result.fileName,
         fileExt: "html",
       })
       .then((addExtResult) => ({
-        ...secondMergeResult,
+        ...result,
         ...addExtResult,
       }));
   })
-  .then((thirdMergeResult) => {
-    console.log("結果：", thirdMergeResult);
+  .then((result) => {
+    console.log("結果：", result);
     return createFs
       .createPath({
-        fileName: thirdMergeResult.fileName,
+        fileName: result.fileName,
       })
       .then((pathResult) => ({
-        ...thirdMergeResult,
+        ...result,
         ...pathResult,
       }));
   })
-  .then((fourthMergeResult) => {
-    console.log("結果：", fourthMergeResult);
+  .then((result) => {
+    console.log("結果：", result);
     return createFs
       .createFile({
-        path: fourthMergeResult.path,
-        fileName: fourthMergeResult.fileName,
+        path: result.path,
+        fileName: result.fileName,
         fileContent: argv.htmlContent,
       })
-      .then((createFileResult) => ({ 
-        ...fourthMergeResult,
+      .then((createFileResult) => ({
+        ...result,
         ...createFileResult,
       }));
   })
-  .then((fifthMergeResult) => {
-    console.log("結果：", fifthMergeResult);
+  .then((result) => {
+    console.log("結果：", result);
     console.log("全ての処理が完了したので、終了します。");
     return;
   })
