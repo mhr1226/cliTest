@@ -6,23 +6,52 @@ const {
 
 const argv = require("./option.js");
 
-const checkFileAndDirAndExt = async () => {
-  console.log("checkFileAndDirAndExt関数を実行します。");
-  const [fileName, dir, ext] = await Promise.all([
-    createFs.checkFileName(argv.html),
+const checkFileParameters = async (fileName) => {
+  const [fileResult, dirResult] = await Promise.all([
+    createFs.checkFileName(fileName),
     createFs.checkDir(),
-    createFs.checkAndAddExt({
-      fileName: argv.html,
-      fileExt: "html",
-    })
   ]);
 
-  const result = { fileName, dir ,ext};
+  console.log("ファイル名結果：", fileResult);
+  console.log("ディレクトリ結果：", dirResult);
+
+  const extResult = await createFs.checkExt(fileResult.name);
+  console.log("拡張子結果：", extResult);
+  const result = { fileResult, dirResult, extResult };
+  return result;
+};
+
+const addExtAndCreatePath = async () => {
+  // ファイル名、ディレクトリ、拡張子の確認
+  const checkResult = await checkFileParameters(argv.html);
+  const { fileResult, extResult } = checkResult;
+
+  // 拡張子を追加
+  const addExtResult = await createFs.addExt({
+    fileName: fileResult.name,
+    fileExt: extResult.name,
+    targetExtension: "html",
+  });
+
+  console.log("拡張子追加結果：", addExtResult);
+
+  // パスを作成
+  const createPathResult = await createFs.createPath({
+    fileName: addExtResult.fileName,
+  });
+
+  console.log("パス作成結果：", createPathResult);
+
+  const result = {
+    ...checkResult,
+    addExtResult,
+    createPathResult,
+  };
   console.log("結果:", result);
   return result;
 };
 
-checkFileAndDirAndExt();
+addExtAndCreatePath();
 
 // createFs
 //   .checkFileName(argv.html)

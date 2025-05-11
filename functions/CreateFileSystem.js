@@ -41,7 +41,7 @@ const createFs = {
       return {
         // 成功時の処理
         message: "ファイル名のチェックに成功しました。",
-        fileName: fileName,
+        name: fileName,
       };
     }
   },
@@ -76,19 +76,19 @@ const createFs = {
     } else {
       return {
         message: "ディレクトリ名のチェックに成功しました。",
-        dir: dir,
+        name: dir,
       };
     }
   },
 
-  // 拡張子チェックと追加
-  checkAndAddExt: async ({ fileName, fileExt }) => {
+  // ファイルの拡張子チェック
+  checkExt: async (fileName) => {
     console.log("拡張子チェックを行います");
 
     // 入力値の検証
-    if (!fileName || !fileExt) {
+    if (!fileName) {
       const error = {
-        source: "addExt",
+        source: "checkExt",
         name: "InvalidInputError",
         message: "ファイル名または拡張子が未指定、もしくは無効です。",
         actionGuide: "入力したファイル名と拡張子を確認してください。",
@@ -99,13 +99,35 @@ const createFs = {
     }
 
     try {
-      // 入力時の拡張子の取得
+      // 拡張子の取得
       const currentExt = path.extname(fileName);
-      // 目的の拡張子の取得
-      const targetExt = `.${fileExt}`;
+
+      return {
+        message: "拡張子のチェックに成功しました。",
+        name: currentExt,
+      };
+    } catch (error) {
+      // 拡張子の取得に失敗した場合
+      const errorInfo = {
+        source: "checkExt",
+        name: error.name,
+        message: "拡張子の取得に失敗しました。",
+        errorMessage: error.message,
+        actionGuide: "エラーの詳細を確認してください。",
+      };
+      console.error(new Error(errorInfo.name));
+      throw errorInfo;
+    }
+  },
+
+  // 拡張子の追加
+  addExt: async ({ fileName, fileExt, targetExtension }) => {
+    try {
+      // 拡張子の取得
+      const targetExt = `.${targetExtension}`;
 
       // 拡張子が存在する場合
-      if (currentExt === targetExt) {
+      if (fileExt === targetExt) {
         // そのまま返す
 
         return {
@@ -125,7 +147,7 @@ const createFs = {
           message: "拡張子の追加に成功しました。",
           originalFileName: fileName,
           fileName: addExtFileName,
-          fileExt: fileExt,
+          extName: targetExt,
         };
       }
     } catch (error) {
@@ -152,7 +174,7 @@ const createFs = {
 
       return {
         message: "パスの生成に成功しました。",
-        path: pathResult,
+        name: pathResult,
       };
     } catch (error) {
       const errorInfo = {
