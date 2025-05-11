@@ -5,7 +5,7 @@ const argv = require("../option.js");
 // ファイル生成オリジナル
 const createFs = {
   // ファイルの入力チェック
-  checkFileName: (fileName) => {
+  checkFileName: async (fileName) => {
     console.log("ファイル名のチェックを行います。");
 
     // ファイル名の入力チェック
@@ -38,16 +38,16 @@ const createFs = {
       console.error(new Error(error.name));
       throw error;
     } else {
-      return Promise.resolve({
+      return {
         // 成功時の処理
         message: "ファイル名のチェックに成功しました。",
         fileName: fileName,
-      });
+      };
     }
   },
 
   // ディレクトリの入力チェック
-  checkDir: (dir = argv.dir) => {
+  checkDir: async (dir = argv.dir) => {
     console.log("ディレクトリ名のチェックを行います。");
 
     // dirに空文字列の場合にはエラーを返す
@@ -74,69 +74,15 @@ const createFs = {
       console.error(new Error(error.name));
       throw error;
     } else {
-      return Promise.resolve({
+      return {
         message: "ディレクトリ名のチェックに成功しました。",
         dir: dir,
-      });
+      };
     }
   },
 
-  // ディレクトリの新規作成
-  createDir: (dir) => {
-    // ディレクトリの存在チェック
-    return (
-      fs.promises
-        .access(dir)
-        // ディレクトリが存在する場合はそのまま処理を続ける
-        .then(() => ({
-          message:
-            "ディレクトリは既に作成されています。このまま処理を続けます。",
-        }))
-        .catch((error) => {
-          if (error.code === "ENOENT") {
-            // ディレクトリが存在しない場合は新規作成する
-            console.log(`${dir}ディレクトリが存在しません。`);
-            console.log("まずは指定されたディレクトリを新規作成します。");
-            // ディレクトリの新規作成
-            console.log("作成中...");
-
-            return fs.promises
-              .mkdir(dir, { recursive: true })
-              .then(() => {
-                console.log(`${dir}ディレクトリを新規作成しました。`);
-                return {
-                  message: "ディレクトリ作成に成功しました。",
-                };
-              })
-              .catch((mkdirError) => {
-                const errorInfo = {
-                  source: "createDir",
-                  name: mkdirError.name,
-                  message: "ディレクトリの新規作成に失敗しました。",
-                  errorMessage: mkdirError.message,
-                  actionGuide: "エラーの詳細を確認してください。",
-                };
-                console.error(new Error(errorInfo.name));
-                throw errorInfo;
-              });
-          } else {
-            // その他のエラーが発生した場合
-            const errorInfo = {
-              source: "createDir",
-              name: error.name,
-              message: "ディレクトリの存在確認中にエラーが発生しました。",
-              errorMessage: error.message,
-              actionGuide: "エラーの詳細を確認してください。",
-            };
-            console.error(new Error(errorInfo.name));
-            throw errorInfo;
-          }
-        })
-    );
-  },
-
   // 拡張子チェックと追加
-  addExt: ({ fileName, fileExt }) => {
+  checkAndAddExt: async ({ fileName, fileExt }) => {
     console.log("拡張子チェックを行います");
 
     // 入力値の検証
@@ -162,11 +108,11 @@ const createFs = {
       if (currentExt === targetExt) {
         // そのまま返す
 
-        return Promise.resolve({
+        return {
           message: "拡張子は既に指定されています。このまま処理を続けます。",
           fileName: fileName,
           fileExt: fileExt,
-        });
+        };
       }
       // 拡張子が存在しない場合
       else {
@@ -175,12 +121,12 @@ const createFs = {
 
         const addExtFileName = `${fileName}${targetExt}`; // 拡張子を追加
 
-        return Promise.resolve({
+        return {
           message: "拡張子の追加に成功しました。",
           originalFileName: fileName,
           fileName: addExtFileName,
           fileExt: fileExt,
-        });
+        };
       }
     } catch (error) {
       // その他のエラーが発生した場合
@@ -197,89 +143,137 @@ const createFs = {
   },
 
   // パスの生成
-  createPath: ({ dir = argv.dir, fileName } = {}) => {
-      // ファイルの保存先のパスを作成する
-      console.log("パスの生成を行います。");
-      try {
-        // パスの結合
-        const pathResult = path.join(dir, fileName);
+  createPath: async ({ dir = argv.dir, fileName } = {}) => {
+    // ファイルの保存先のパスを作成する
+    console.log("パスの生成を行います。");
+    try {
+      // パスの結合
+      const pathResult = path.join(dir, fileName);
 
-        return Promise.resolve({
-          message: "パスの生成に成功しました。",
-          path: pathResult,
-        });
-      } catch (error) {
+      return {
+        message: "パスの生成に成功しました。",
+        path: pathResult,
+      };
+    } catch (error) {
+      const errorInfo = {
+        source: "createPath",
+        name: error.name,
+        message: "パスの生成に失敗しました。",
+        errorMessage: error.message,
+        actionGuide: "エラーの詳細を確認してください。",
+      };
+      console.error(new Error(errorInfo.name));
+      throw errorInfo;
+    }
+  },
+
+  // ディレクトリの作成
+  createDir: async (dir = argv.dir) => {
+    // ディレクトリの存在チェック
+
+    try {
+      await fs.promises.access(dir);
+      // ディレクトリが存在する場合はそのまま処理を続ける
+      return {
+        message: "ディレクトリは既に作成されています。このまま処理を続けます。",
+      };
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        // ディレクトリが存在しない場合は新規作成する
+        console.log(`${dir}ディレクトリが存在しません。`);
+        console.log("まずは指定されたディレクトリを新規作成します。");
+        // ディレクトリの新規作成
+
+        try {
+          console.log("作成中...");
+
+          await fs.promises.mkdir(dir, { recursive: true });
+
+          console.log(`${dir}ディレクトリを新規作成しました。`);
+
+          return {
+            message: "ディレクトリ作成に成功しました。",
+          };
+        } catch (mkdirError) {
+          const errorInfo = {
+            source: "createDir",
+            name: mkdirError.name,
+            message: "ディレクトリの新規作成に失敗しました。",
+            errorMessage: mkdirError.message,
+            actionGuide: "エラーの詳細を確認してください。",
+          };
+          console.error(new Error(errorInfo.name));
+          throw errorInfo;
+        }
+      } else {
+        // その他のエラーが発生した場合
         const errorInfo = {
-          source: "createPath",
+          source: "createDir",
           name: error.name,
-          message: "パスの生成に失敗しました。",
+          message: "ディレクトリの存在確認中にエラーが発生しました。",
           errorMessage: error.message,
           actionGuide: "エラーの詳細を確認してください。",
         };
         console.error(new Error(errorInfo.name));
         throw errorInfo;
       }
-    ;
+    }
   },
 
   // ファイルの作成
-  createFile: ({ path, fileName, dir = argv.dir, fileContent } = {}) => {
+  createFile: async ({ path, fileName, dir = argv.dir, fileContent } = {}) => {
     console.log("ファイルの生成処理を行います。");
+
+    try {
       // ファイルの存在チェック
-      return fs.promises
-        .access(path)
-        .then(() => {
-          // ファイルが存在する場合
+      await fs.promises.access(path);
+
+      // ファイルが存在する場合
+      return {
+        message: `${fileName}は既に${dir}内に保存されています。このまま処理を終了します。`,
+        fileContent: fileContent,
+      };
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        // ファイルが存在しない場合
+        console.log(`${fileName}が存在しない為、${dir}内に新規作成します。`);
+
+        try {
+          console.log("ファイル生成中...");
+
+          // ファイルの生成
+          await fs.promises.writeFile(path, fileContent, {
+            encoding: "utf-8",
+          });
+
           return {
-            message: `${fileName}は既に${dir}内に保存されています。このまま処理を終了します。`,
-            fileContent: fileContent,
+            message: `${fileName}を${dir}に保存しました。`,
+            fileContent: `${fileContent.slice(0, 50)}...`, // 先頭50文字を表示
           };
-        })
-        .catch((error) => {
-          if (error.code === "ENOENT") {
-            // ファイルが存在しない場合
-            console.log(
-              `${fileName}が存在しない為、${dir}内に新規作成します。`
-            );
-            console.log("ファイル生成中...");
-
-            // ファイルの生成
-            return fs.promises
-              .writeFile(path, fileContent, {
-                encoding: "utf-8",
-              })
-              .then(() => {
-
-                return {
-                  message: `${fileName}を${dir}に保存しました。`,
-                  fileContent: `${fileContent.slice(0, 50)}...`, // 先頭50文字を表示
-                };
-              })
-              .catch((writeFileError) => {
-                const errorInfo = {
-                  source: "createFile",
-                  name: writeFileError.name,
-                  message: "ファイルの生成に失敗しました。",
-                  errorMessage: writeFileError.message,
-                  actionGuide: "エラーの詳細を確認してください。",
-                };
-                console.error(new Error(errorInfo.name));
-                throw errorInfo;
-              });
-          } else {
-            // その他のエラーが発生した場合
-            const errorInfo = {
-              source: "createFile",
-              name: error.name,
-              message: "ファイルの生成に失敗しました。",
-              errorMessage: error.message,
-              actionGuide: "エラーの詳細を確認してください。",
-            };
-            console.error(new Error(errorInfo.name));
-            throw errorInfo;
-          }
-        });
-    ;
+        } catch (writeFileError) {
+          const errorInfo = {
+            source: "createFile",
+            name: writeFileError.name,
+            message: "ファイルの生成に失敗しました。",
+            errorMessage: writeFileError.message,
+            actionGuide: "エラーの詳細を確認してください。",
+          };
+          console.error(new Error(errorInfo.name));
+          throw errorInfo;
+        }
+      } else {
+        // その他のエラーが発生した場合
+        const errorInfo = {
+          source: "createFile",
+          name: error.name,
+          message: "ファイルの生成に失敗しました。",
+          errorMessage: error.message,
+          actionGuide: "エラーの詳細を確認してください。",
+        };
+        console.error(new Error(errorInfo.name));
+        throw errorInfo;
+      }
+    }
   },
 };
 
