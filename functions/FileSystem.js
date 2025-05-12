@@ -6,7 +6,7 @@ const argv = require("../option.js");
 const FileSystem = {
   // ファイルの入力チェック
   checkFileName: async (fileName) => {
-    console.log("ファイル名のチェックを行います。");
+    console.log(`${fileName}のチェックを行います。`);
 
     // ファイル名の入力チェック
     if (!fileName) {
@@ -38,9 +38,9 @@ const FileSystem = {
       console.error(new Error(error.name));
       throw error;
     } else {
+      // 成功時の処理
       return {
-        // 成功時の処理
-        message: "ファイル名のチェックに成功しました。",
+        message: `${fileName}のチェックに成功しました。`,
         name: fileName,
       };
     }
@@ -48,7 +48,7 @@ const FileSystem = {
 
   // ディレクトリの入力チェック
   checkDir: async (dir = argv.dir) => {
-    console.log("ディレクトリ名のチェックを行います。");
+    console.log(`${dir}のチェックを行います。`);
 
     // dirに空文字列の場合にはエラーを返す
     if (!dir) {
@@ -74,8 +74,9 @@ const FileSystem = {
       console.error(new Error(error.name));
       throw error;
     } else {
+      // 成功時の処理
       return {
-        message: "ディレクトリ名のチェックに成功しました。",
+        message: `${dir}のチェックに成功しました。`,
         name: dir,
       };
     }
@@ -83,7 +84,7 @@ const FileSystem = {
 
   // ファイルの拡張子チェック
   checkExt: async (fileName) => {
-    console.log("拡張子チェックを行います");
+    console.log(`${fileName}の拡張子チェックを行います。`);
 
     // 入力値の検証
     if (!fileName) {
@@ -102,8 +103,9 @@ const FileSystem = {
       // 拡張子の取得
       const currentExt = path.extname(fileName);
 
+      // 成功時の処理
       return {
-        message: "拡張子のチェックに成功しました。",
+        message: `${fileName}の拡張子チェックに成功しました。`,
         name: currentExt,
       };
     } catch (error) {
@@ -143,8 +145,9 @@ const FileSystem = {
 
         const addExtFileName = `${fileName}${targetExt}`; // 拡張子を追加
 
+        // 成功時の処理
         return {
-          message: "拡張子の追加に成功しました。",
+          message: `${targetExt}拡張子を追加しました。`,
           originalFileName: fileName,
           fileName: addExtFileName,
           extName: targetExt,
@@ -167,13 +170,14 @@ const FileSystem = {
   // パスの生成
   createPath: async ({ dir = argv.dir, fileName } = {}) => {
     // ファイルの保存先のパスを作成する
-    console.log("パスの生成を行います。");
+    console.log(`${fileName}のパスを生成します。`);
     try {
       // パスの結合
       const pathResult = path.join(dir, fileName);
 
+      // 成功時の処理
       return {
-        message: "パスの生成に成功しました。",
+        message: `${fileName}のパスを生成しました。`,
         name: pathResult,
       };
     } catch (error) {
@@ -211,6 +215,7 @@ const FileSystem = {
 
           await fs.promises.mkdir(dir, { recursive: true });
 
+          // 成功時の処理
           return {
             message: "ディレクトリ作成に成功しました。",
           };
@@ -266,6 +271,7 @@ const FileSystem = {
             encoding: "utf-8",
           });
 
+          // 成功時の処理
           return {
             message: `${fileName}を${dir}に保存しました。`,
             fileContent: `${fileContent.slice(0, 50)}...`, // 先頭50文字を表示
