@@ -3,7 +3,7 @@ const path = require("node:path");
 const argv = require("../option.js");
 
 // ファイル生成オリジナル
-const createFs = {
+const FileSystem = {
   // ファイルの入力チェック
   checkFileName: async (fileName) => {
     console.log("ファイル名のチェックを行います。");
@@ -138,8 +138,8 @@ const createFs = {
       }
       // 拡張子が存在しない場合
       else {
-        console.log(`.${fileExt}拡張子が指定されていません。`);
-        console.log(`.${fileExt}拡張子を追加します。`);
+        console.log(`.${targetExtension}拡張子が指定されていません。`);
+        console.log(`.${targetExtension}拡張子を追加します。`);
 
         const addExtFileName = `${fileName}${targetExt}`; // 拡張子を追加
 
@@ -211,8 +211,6 @@ const createFs = {
 
           await fs.promises.mkdir(dir, { recursive: true });
 
-          console.log(`${dir}ディレクトリを新規作成しました。`);
-
           return {
             message: "ディレクトリ作成に成功しました。",
           };
@@ -253,7 +251,7 @@ const createFs = {
       // ファイルが存在する場合
       return {
         message: `${fileName}は既に${dir}内に保存されています。このまま処理を終了します。`,
-        fileContent: fileContent,
+        fileContent: `${fileContent.slice(0, 50)}...`, // 先頭50文字を表示
       };
     } catch (error) {
       if (error.code === "ENOENT") {
@@ -299,116 +297,4 @@ const createFs = {
   },
 };
 
-// HTMLのファイル生成
-const createHtml = Object.assign({}, createFs, {
-  // プロパティの定義
-  htmlName: argv.html, // HTMLファイル名
-  htmlExt: "html", // HTMLファイルの拡張子
-  htmlContent: argv.htmlContent, // HTMLファイルの内容
-
-  // HTMLのパスを生成する
-  create: function ({
-    fileName = this.htmlName,
-    fileExt = this.htmlExt,
-    fileContent = this.htmlContent,
-  } = {}) {
-    return (
-      // 拡張子チェックと追加
-      this.addExt({ fileName, fileExt })
-        // パスの生成
-        .createPath()
-        // ファイルの生成
-        .createFile({
-          fileContent: fileContent,
-        })
-        // メソッドチェーンの結果オブジェクトの取得
-        .getResult()
-    );
-  },
-  // CSSファイルをHTMLファイルに読み込む
-  loadCssFileSync: function (htmlPath, htmlFileName, cssFileName) {
-    try {
-      // HTMLファイルの読み込み
-      console.log(`まず${htmlFileName}を読み込み中...`);
-      const readHtmlContent = fs.readFileSync(htmlPath, {
-        encoding: "utf-8",
-      });
-      console.log(`${htmlFileName}の読み込み完了。`);
-
-      // CSSファイルの読み込み
-      // HTMLの書き換え
-
-      console.log(
-        `続いて${htmlFileName}内に${cssFileName}の相対パスを差し込みます。`
-      );
-      const updatedHtmlContent = readHtmlContent.replace(
-        "</head>",
-        `  <link rel="stylesheet" href="./${cssFileName}">\n</head>`
-      );
-      console.log(`${htmlFileName}の書き換え完了。`);
-
-      // HTMLファイルの上書き保存
-      console.log(`書き換えた内容を${htmlFileName}を保存します。`);
-      console.log("保存中...");
-      // HTMLファイルの上書き保存
-      fs.writeFileSync(htmlPath, updatedHtmlContent, {
-        encoding: "utf-8",
-      });
-      console.log(`${htmlFileName}の保存完了。`);
-      console.log(`CSSファイルをHTMLファイルに読み込みました。`);
-
-      return {
-        success: true,
-        htmlFileName: htmlFileName,
-        htmlPath: htmlPath,
-        cssFileName: cssFileName,
-        beforeContent: readHtmlContent,
-        updatedContent: updatedHtmlContent,
-      };
-    } catch (error) {
-      console.error(
-        `CSSファイルをHTMLファイルに読み込む処理中にエラーが発生しました。`
-      );
-      console.error(`処理を中断します。`);
-      return {
-        success: false,
-        name: error.name,
-        message: error.message,
-      };
-    }
-  },
-});
-
-// CSSのファイル生成
-const createCss = Object.assign({}, createFs, {
-  // プロパティの定義
-  cssName: argv.css, // CSSファイル名
-  cssExt: "css", // CSSファイルの拡張子
-  cssContent: argv.cssContent, // CSSファイルの内容
-
-  // CSSのパスを生成する
-  create: function ({
-    fileName = this.cssName,
-    fileExt = this.cssExt,
-    fileContent = this.cssContent,
-  } = {}) {
-    return (
-      // 拡張子チェックと追加
-      this.addExt(fileName, fileExt)
-        //パスの生成
-        .createPath()
-        // ファイルの生成
-        .createFile({
-          fileContent: fileContent,
-        })
-        // メソッドチェーンの結果オブジェクトの取得
-        .getResult()
-    );
-  },
-});
-
-module.exports = {
-  createFs,
-  createHtml,
-  createCss,
-};
+module.exports = FileSystem;
