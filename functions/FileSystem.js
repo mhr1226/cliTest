@@ -8,41 +8,54 @@ const FileSystem = {
   checkFileName: async (fileName) => {
     console.log(`${fileName}のチェックを行います。`);
 
-    // ファイル名の入力チェック
-    if (!fileName) {
-      const error = {
+    try {
+      // ファイル名の入力チェック
+      if (!fileName) {
+        const error = {
+          source: "checkFileName",
+          name: "InvalidFileNameError",
+          message: "ファイル名が未指定、もしくは無効なファイル名です。",
+          actionGuide: "ファイル名を修正してください。",
+        };
+
+        console.error(new Error(error.name));
+
+        throw error;
+      }
+      // ファイル名に相対パスが含まれているかをチェックする
+      else if (
+        fileName.includes("../") ||
+        fileName.includes("..\\") ||
+        fileName.includes("/") ||
+        fileName.includes("\\")
+      ) {
+        const error = {
+          source: "checkFileName",
+          name: "InvalidFileNameError",
+          message: "ファイル名にパス区切り文字が含まれています。",
+          actionGuide: "ファイル名を修正してください。",
+        };
+
+        console.error(new Error(error.name));
+        throw error;
+      } else {
+        // 成功時の処理
+        return {
+          message: `${fileName}のチェックに成功しました。`,
+          name: fileName,
+        };
+      }
+    } catch (checkFileNameError) {
+      const errorInfo = {
         source: "checkFileName",
-        name: "InvalidFileNameError",
-        message: "ファイル名が未指定、もしくは無効なファイル名です。",
-        actionGuide: "ファイル名を修正してください。",
+        name: checkFileNameError.name,
+        message: "ファイル名のチェックに失敗しました。",
+        errorMessage: checkFileNameError.message,
+        actionGuide: "エラーの詳細を確認してください。",
       };
 
-      console.error(new Error(error.name));
-
-      throw error;
-    }
-    // ファイル名に相対パスが含まれているかをチェックする
-    else if (
-      fileName.includes("../") ||
-      fileName.includes("..\\") ||
-      fileName.includes("/") ||
-      fileName.includes("\\")
-    ) {
-      const error = {
-        source: "checkFileName",
-        name: "InvalidFileNameError",
-        message: "ファイル名にパス区切り文字が含まれています。",
-        actionGuide: "ファイル名を修正してください。",
-      };
-
-      console.error(new Error(error.name));
-      throw error;
-    } else {
-      // 成功時の処理
-      return {
-        message: `${fileName}のチェックに成功しました。`,
-        name: fileName,
-      };
+      console.error(new Error(errorInfo.name));
+      throw errorInfo;
     }
   },
 
@@ -50,35 +63,48 @@ const FileSystem = {
   checkDir: async (dir = argv.dir) => {
     console.log(`${dir}のチェックを行います。`);
 
-    // dirに空文字列の場合にはエラーを返す
-    if (!dir) {
-      const error = {
+    try {
+      // dirに空文字列の場合にはエラーを返す
+      if (!dir) {
+        const error = {
+          source: "checkDir",
+          name: "InvalidDirError",
+          message: "ディレクトリ名が未指定、もしくは無効なディレクトリ名です。",
+          actionGuide: "ディレクトリ名を修正してください。",
+        };
+
+        console.error(new Error(error.name));
+        throw error;
+      }
+      // dirに危険な文字列が含まれているかをチェックする
+      else if (dir.includes("../") || dir.includes("..\\")) {
+        const error = {
+          source: "checkDir",
+          name: "InvalidDirError",
+          message: "ディレクトリ名に無効なパスが含まれています。",
+          actionGuide: "ディレクトリ名を修正してください。",
+        };
+
+        console.error(new Error(error.name));
+        throw error;
+      } else {
+        // 成功時の処理
+        return {
+          message: `${dir}のチェックに成功しました。`,
+          name: dir,
+        };
+      }
+    } catch (checkDirError) {
+      const errorInfo = {
         source: "checkDir",
-        name: "InvalidDirError",
-        message: "ディレクトリ名が未指定、もしくは無効なディレクトリ名です。",
-        actionGuide: "ディレクトリ名を修正してください。",
+        name: checkDirError.name,
+        message: "ディレクトリのチェックに失敗しました。",
+        errorMessage: checkDirError.message,
+        actionGuide: "エラーの詳細を確認してください。",
       };
 
-      console.error(new Error(error.name));
-      throw error;
-    }
-    // dirに危険な文字列が含まれているかをチェックする
-    else if (dir.includes("../") || dir.includes("..\\")) {
-      const error = {
-        source: "checkDir",
-        name: "InvalidDirError",
-        message: "ディレクトリ名に無効なパスが含まれています。",
-        actionGuide: "ディレクトリ名を修正してください。",
-      };
-
-      console.error(new Error(error.name));
-      throw error;
-    } else {
-      // 成功時の処理
-      return {
-        message: `${dir}のチェックに成功しました。`,
-        name: dir,
-      };
+      console.error(new Error(errorInfo.name));
+      throw errorInfo;
     }
   },
 

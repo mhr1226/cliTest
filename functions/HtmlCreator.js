@@ -20,18 +20,31 @@ const HtmlCreator = Object.assign({}, FileCreator, {
     const htmlExt = "html"; // HTMLファイルの拡張子
     const htmlContent = argv.htmlContent; // HTMLファイルの内容
 
-    const html = await FileCreator.createAll({
-      fileParameter: htmlName,
-      targetExtension: htmlExt,
-      fileContent: htmlContent,
-    });
+    try {
+      const html = await FileCreator.createAll({
+        fileParameter: htmlName,
+        targetExtension: htmlExt,
+        fileContent: htmlContent,
+      });
 
-    const result = {
-      htmlName: html.addExtAndPathResult.addExtResult.fileName,
-      htmlPath: html.addExtAndPathResult.createPathResult.name,
+      const result = {
+        htmlName: html.addExtAndPathResult.addExtResult.fileName,
+        htmlPath: html.addExtAndPathResult.createPathResult.name,
+      };
+
+      return result;
+    } catch (createHmlError) {
+      const errorInfo = {
+        source: "createHtml",
+        name: createHmlError.name,
+        message: "HTMLファイルの生成に失敗しました。",
+        errorMessage: createHmlError.message,
+        actionGuide: "エラーの詳細を確認してください。",
+      }
+
+      console.error(new Error(errorInfo.name));
+      throw errorInfo;
     }
-
-    return result;
   },
   // CSSファイルをHTMLファイルに読み込む
   loadCssToHtml: async ({ htmlFileName, cssFileName, path }) => {
