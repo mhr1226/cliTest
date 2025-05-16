@@ -4,6 +4,55 @@ const argv = require("../option.js");
 
 // ファイル生成オリジナル
 const FileSystem = {
+  // カスタムエラーの作成
+  setCustomError: ({
+    source = null,
+    name,
+    message = `${name}が発生しました。`,
+    actionGuide = `${name}の詳細を確認してください。`,
+  } = {}) => {
+    
+
+    return {
+      source,
+      name,
+      message,
+      actionGuide,
+    };
+  },
+
+  // エラー情報をコンソールに出力
+  setCustomLogs: (errorInfo) => {
+    // エラー情報をセット
+    const { source, name, message, actionGuide } = errorInfo;
+
+    const errorLogs = `
+    =====エラーが発生しました。=====
+    エラー発生場所：${source || "Unknown"}
+    エラー名：${name}
+    エラーメッセージ：${message}
+    エラーガイド：${actionGuide}
+    `;
+
+    // エラー情報をコンソールに出力
+    console.error("==========================================");
+    console.error(errorLogs);
+    console.error("==========================================");
+
+    return errorInfo;
+  },
+
+  // catch文でのログ出力
+  setCatchErrorLog: (err) => {
+    
+    console.error("==========================================");
+    console.error(`${err.name}が発生しています。`);
+    console.error("エラー詳細：");
+    console.error(err);
+    console.error("==========================================");
+    console.error("処理を終了します。");
+  },
+
   // ファイルの入力チェック
   checkFileName: async (fileName) => {
     console.log(`${fileName}のチェックを行います。`);
@@ -11,16 +60,14 @@ const FileSystem = {
     try {
       // ファイル名の入力チェック
       if (!fileName) {
-        const error = {
+        const errorInfo = FileSystem.setCustomError({
           source: "checkFileName",
           name: "InvalidFileNameError",
           message: "ファイル名が未指定、もしくは無効なファイル名です。",
           actionGuide: "ファイル名を修正してください。",
-        };
+        });
 
-        console.error(new Error(error.name));
-
-        throw error;
+        throw new Error(errorInfo.message);
       }
       // ファイル名に相対パスが含まれているかをチェックする
       else if (
@@ -29,15 +76,13 @@ const FileSystem = {
         fileName.includes("/") ||
         fileName.includes("\\")
       ) {
-        const error = {
+        const errorInfo = FileSystem.setCustomError({
           source: "checkFileName",
-          name: "InvalidFileNameError",
-          message: "ファイル名にパス区切り文字が含まれています。",
+          name: "ReferenceError",
+          message: "ファイル名に無効なパスが含まれています。",
           actionGuide: "ファイル名を修正してください。",
-        };
-
-        console.error(new Error(error.name));
-        throw error;
+        });
+        throw new Error(errorInfo.message);
       } else {
         // 成功時の処理
         return {
@@ -45,17 +90,8 @@ const FileSystem = {
           name: fileName,
         };
       }
-    } catch (checkFileNameError) {
-      const errorInfo = {
-        source: "checkFileName",
-        name: checkFileNameError.name,
-        message: "ファイル名のチェックに失敗しました。",
-        errorMessage: checkFileNameError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+    } catch (err) {
+      throw err;
     }
   },
 

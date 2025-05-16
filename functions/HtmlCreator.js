@@ -33,17 +33,11 @@ const HtmlCreator = Object.assign({}, FileCreator, {
       };
 
       return result;
-    } catch (createHmlError) {
-      const errorInfo = {
-        source: "createHtml",
-        name: createHmlError.name,
-        message: "HTMLファイルの生成に失敗しました。",
-        errorMessage: createHmlError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      }
-
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+    } catch (err) {
+      // エラー情報をセット
+      console.log(`createHtmlのエラー出力を確認します。`);
+      console.error(JSON.stringify(err));
+      throw err;
     }
   },
   // CSSファイルをHTMLファイルに読み込む

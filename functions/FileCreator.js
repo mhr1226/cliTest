@@ -9,6 +9,7 @@ const FileSystem = require("./FileSystem.js");
 const FileCreator = Object.assign({}, FileSystem, {
   // コマンドライン引数の取得
   checkFileParameters: async (fileName) => {
+    console.log("checkFileParametersを実行します。");
     try {
       const [fileResult, dirResult] = await Promise.all([
         FileSystem.checkFileName(fileName),
@@ -25,17 +26,12 @@ const FileCreator = Object.assign({}, FileSystem, {
         extResult,
       };
       return result;
-    } catch (checkFileParametersError) {
-      const errorInfo = {
-        source: "checkFileParameters",
-        name: checkFileParametersError.name,
-        message: "ファイル名のチェックに失敗しました。",
-        errorMessage: checkFileParametersError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
+    } catch (err) {
 
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+      console.error(`${err.name}のエラーを取得しました。`);
+      console.error("エラー詳細：", err);
+      
+      throw err;
     }
   },
 
@@ -114,46 +110,46 @@ const FileCreator = Object.assign({}, FileSystem, {
   },
 
   // エラー処理
-  handleError: (error) => {
-    try {
-      // errorが存在しない、または予期しない型の場合
-      if (!error || typeof error !== "object") {
-        console.error(
-          "不明なエラーが発生しました。エラーオブジェクトが存在しません。"
-        );
-        console.error("処理を終了します。");
-      }
-      // error.sourceが存在しない場合
-      else if (!error.source) {
-        // エラーの発生場所を特定する
-        try {
-          // 2行目（エラー発生元）のスタック情報とエラー全体の取得
-          const secondStack = error.stack.split("\n")[1];
-          console.error(`${secondStack}でエラーが発生しています。`);
-          console.error("エラー詳細：", error);
-          console.error("処理を終了します。");
-        } catch (getStackError) {
-          // stackプロパティの取得に失敗した場合
-          console.error("スタック情報の取得に失敗しました。");
-          console.error("エラー詳細：", getStackError);
-          console.error("処理を終了します。");
-          return;
-        }
-      } else {
-        // 通常のエラー発生時の処理
-        console.error(`${error.source}でエラーが発生しています。`);
-        console.error("エラー詳細：", error);
-        console.error("処理を終了します。");
-      }
-    } catch (handleError) {
-      // エラー処理中にエラーが発生した場合
-      console.error("エラー処理中にエラーが発生しました。");
-      console.error("エラー詳細：", handleError);
-      console.error("処理を終了します。");
-      return;
-    }
-    return;
-  },
+  // handleError: (error) => {
+  //   try {
+  //     // errorが存在しない、または予期しない型の場合
+  //     if (!error || typeof error !== "object") {
+  //       console.error(
+  //         "不明なエラーが発生しました。エラーオブジェクトが存在しません。"
+  //       );
+  //       console.error("処理を終了します。");
+  //     }
+  //     // error.sourceが存在しない場合
+  //     else if (!error.source) {
+  //       // エラーの発生場所を特定する
+  //       try {
+  //         // 2行目（エラー発生元）のスタック情報とエラー全体の取得
+  //         const secondStack = error.stack.split("\n")[1];
+  //         console.error(`${secondStack}でエラーが発生しています。`);
+  //         console.error("エラー詳細：", error);
+  //         console.error("処理を終了します。");
+  //       } catch (getStackError) {
+  //         // stackプロパティの取得に失敗した場合
+  //         console.error("スタック情報の取得に失敗しました。");
+  //         console.error("エラー詳細：", getStackError);
+  //         console.error("処理を終了します。");
+  //         return;
+  //       }
+  //     } else {
+  //       // 通常のエラー発生時の処理
+  //       console.error(`${error.source}でエラーが発生しています。`);
+  //       console.error("エラー詳細：", error);
+  //       console.error("処理を終了します。");
+  //     }
+  //   } catch (handleError) {
+  //     // エラー処理中にエラーが発生した場合
+  //     console.error("エラー処理中にエラーが発生しました。");
+  //     console.error("エラー詳細：", handleError);
+  //     console.error("処理を終了します。");
+  //     return;
+  //   }
+  //   return;
+  // },
 
   // ファイル生成：一連の処理
   createAll: async ({ fileParameter, targetExtension, fileContent }) => {
@@ -188,10 +184,11 @@ const FileCreator = Object.assign({}, FileSystem, {
       console.log("全ての処理が完了したので、終了します。");
 
       return result;
-    } catch (error) {
+    } catch (err) {
       // 不明なエラー発生時の処理
-      FileCreator.handleError(error);
-      throw error;
+      console.log(`createAllのエラー出力を確認します。`);
+      console.error(JSON.stringify(err));
+      throw err;
     }
   },
 });
