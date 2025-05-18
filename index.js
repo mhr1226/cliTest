@@ -8,26 +8,44 @@ const test = async () => {
   try {
     console.log("testを実行します。");
 
-    const error = FileCreator.setCustomError({
-      source: "test",
-      name: "TestError",
+    // ファイル名の確認
+    const fileResult = await FileCreator.checkFileName(argv.html);
+    console.log(fileResult);
+
+    // ディレクトリの確認
+    const dirResult = await FileCreator.checkDir();
+    console.log(dirResult);
+
+    // 拡張子の確認
+    const extResult = await FileCreator.checkExt(argv.html);
+    console.log(extResult);
+    // 拡張子の追加
+    const addExtResult = await FileCreator.addExt({
+      fileName: argv.html,
+      fileExt: extResult.name,
+      targetExtension: "html",
     });
+    console.log(addExtResult);
+    // パスの作成
+    const createPathResult = await FileCreator.createPath({
+      fileName: addExtResult.fileName,
+    });
+    console.log(createPathResult);
 
-    if (error) {
-      // エラーログの出力
-      FileCreator.setCustomLogs(error);
-      throw new Error(error.actionGuide);
-    }
-
-    const result = {
-      htmlName: argv.html,
-      cssName: argv.css,
-    };
-    console.log(result);
+    // ディレクトリの作成
+    const createDirResult = await FileCreator.createDir();
+    console.log(createDirResult);
+    // ファイルの生成
+    const createFileResult = await FileCreator.createFile({
+      path: createPathResult.name,
+      fileName: addExtResult.fileName,
+      fileContent: argv.htmlContent
+    });
+    console.log(createFileResult);
   } catch (err) {
-    
-    // エラー状況に応じたログを出力
-    FileCreator.setCatchErrorLog(err);
+    // 関数の終点
+    // エラー内容の出力
+    FileCreator.setCatchErrorLogs(err);
   }
 };
 

@@ -11,8 +11,7 @@ const FileSystem = {
     message = `${name}が発生しました。`,
     actionGuide = `${name}の詳細を確認してください。`,
   } = {}) => {
-    
-
+    // エラー情報をセット
     return {
       source,
       name,
@@ -42,32 +41,84 @@ const FileSystem = {
     return errorInfo;
   },
 
+  // カスタムエラーのreturn
+  returnCustomError: (errorInfo) => {
+    // errorInfoの内容を展開
+    const { source, name, message, actionGuide } = errorInfo;
+
+    // エラーオブジェクトの作成
+    const error = new Error(actionGuide);
+
+    // errorの拡張
+    error.source = source;
+    error.customName = name;
+    error.customMessage = message;
+    error.actionGuide = actionGuide;
+
+    return error;
+  },
+
+  // カスタムエラーの統合メソッド
+  setCustomErrorAll: ({
+    source = null,
+    name,
+    message = `${name}が発生しました。`,
+    actionGuide = `${name}の詳細を確認してください。`,
+  } = {}) => {
+    // エラー情報をセット
+    const errorInfo = {
+      source,
+      name,
+      message,
+      actionGuide,
+    };
+
+    // エラーログの出力
+    FileSystem.setCustomLogs(errorInfo);
+
+    // エラーオブジェクトの完成版をreturnする
+    return FileSystem.returnCustomError(errorInfo);
+  },
+
   // catch文でのログ出力
-  setCatchErrorLog: (err) => {
-    
-    console.error("==========================================");
-    console.error(`${err.name}が発生しています。`);
-    console.error("エラー詳細：");
-    console.error(err);
-    console.error("==========================================");
+  setCatchErrorLogs: (err) => {
+    // カスタムエラーの場合
+    if (err.source) {
+      console.error(`カスタムエラー:\n${err.customName},\n${err.source}`);
+      console.error(err);
+      console.error(`エラー元：\n${err.stack.split("\n").slice(1, 2)}`);
+      console.error("==========================================");
+    }
+    // それ以外のエラー
+    else {
+      console.error(`${err.name}が発生しました。`);
+      console.error("==========================================");
+      console.error("エラー詳細：\n", err);
+      console.error("エラー元：\n", err.stack.split("\n").slice(0, 2));
+      console.error("==========================================");
+    }
     console.error("処理を終了します。");
+    return err;
+  },
+
+  // 成功時のオブジェクトを作成
+  setResult: (result) => {
+    return result;
   },
 
   // ファイルの入力チェック
   checkFileName: async (fileName) => {
-    console.log(`${fileName}のチェックを行います。`);
+    console.log(`ファイルの入力チェックを行います。`);
 
     try {
       // ファイル名の入力チェック
       if (!fileName) {
-        const errorInfo = FileSystem.setCustomError({
+        throw FileSystem.setCustomErrorAll({
           source: "checkFileName",
           name: "InvalidFileNameError",
           message: "ファイル名が未指定、もしくは無効なファイル名です。",
           actionGuide: "ファイル名を修正してください。",
         });
-
-        throw new Error(errorInfo.message);
       }
       // ファイル名に相対パスが含まれているかをチェックする
       else if (
@@ -76,19 +127,18 @@ const FileSystem = {
         fileName.includes("/") ||
         fileName.includes("\\")
       ) {
-        const errorInfo = FileSystem.setCustomError({
+        throw FileSystem.setCustomErrorAll({
           source: "checkFileName",
           name: "ReferenceError",
           message: "ファイル名に無効なパスが含まれています。",
           actionGuide: "ファイル名を修正してください。",
         });
-        throw new Error(errorInfo.message);
       } else {
         // 成功時の処理
-        return {
-          message: `${fileName}のチェックに成功しました。`,
+        return FileSystem.setResult({
+          message: `ファイルの入力チェックに成功しました。`,
           name: fileName,
-        };
+        });
       }
     } catch (err) {
       throw err;
@@ -97,68 +147,50 @@ const FileSystem = {
 
   // ディレクトリの入力チェック
   checkDir: async (dir = argv.dir) => {
-    console.log(`${dir}のチェックを行います。`);
+    console.log(`ディレクトリの入力チェックを行います。`);
 
     try {
       // dirに空文字列の場合にはエラーを返す
       if (!dir) {
-        const error = {
+        throw FileSystem.setCustomErrorAll({
           source: "checkDir",
-          name: "InvalidDirError",
+          nme: "InvalidDirError",
           message: "ディレクトリ名が未指定、もしくは無効なディレクトリ名です。",
           actionGuide: "ディレクトリ名を修正してください。",
-        };
-
-        console.error(new Error(error.name));
-        throw error;
+        });
       }
       // dirに危険な文字列が含まれているかをチェックする
       else if (dir.includes("../") || dir.includes("..\\")) {
-        const error = {
+        throw FileSystem.setCustomErrorAll({
           source: "checkDir",
           name: "InvalidDirError",
           message: "ディレクトリ名に無効なパスが含まれています。",
           actionGuide: "ディレクトリ名を修正してください。",
-        };
-
-        console.error(new Error(error.name));
-        throw error;
+        });
       } else {
         // 成功時の処理
-        return {
-          message: `${dir}のチェックに成功しました。`,
+        return FileSystem.setResult({
+          message: `ディレクトリの入力チェックに成功しました。`,
           name: dir,
-        };
+        });
       }
-    } catch (checkDirError) {
-      const errorInfo = {
-        source: "checkDir",
-        name: checkDirError.name,
-        message: "ディレクトリのチェックに失敗しました。",
-        errorMessage: checkDirError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+    } catch (err) {
+      throw err;
     }
   },
 
   // ファイルの拡張子チェック
   checkExt: async (fileName) => {
-    console.log(`${fileName}の拡張子チェックを行います。`);
+    console.log(`拡張子の入力チェックを行います。`);
 
     // 入力値の検証
     if (!fileName) {
-      const error = {
+      throw FileSystem.setCustomErrorAll({
         source: "checkExt",
         name: "InvalidInputError",
-        message: "ファイル名または拡張子が未指定、もしくは無効です。",
-        actionGuide: "入力したファイル名と拡張子を確認してください。",
-      };
-
-      console.error(new Error(error.name));
-      throw error;
+        message: "ファイル名が未指定、もしくは無効です。",
+        actionGuide: "入力したファイル名を確認してください。",
+      });
     }
 
     try {
@@ -166,21 +198,13 @@ const FileSystem = {
       const currentExt = path.extname(fileName);
 
       // 成功時の処理
-      return {
-        message: `${fileName}の拡張子チェックに成功しました。`,
+      return FileSystem.setResult({
+        message: `${fileName}の拡張子を取得しました。`,
         name: currentExt,
-      };
-    } catch (error) {
+      });
+    } catch (err) {
       // 拡張子の取得に失敗した場合
-      const errorInfo = {
-        source: "checkExt",
-        name: error.name,
-        message: "拡張子の取得に失敗しました。",
-        errorMessage: error.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+      throw err;
     }
   },
 
@@ -190,42 +214,37 @@ const FileSystem = {
       // 拡張子の取得
       const targetExt = `.${targetExtension}`;
 
+      console.log(`${targetExt}拡張子の存在チェックを行います。`);
+
       // 拡張子が存在する場合
       if (fileExt === targetExt) {
         // そのまま返す
 
-        return {
+        return FileSystem.setResult({
           message: "拡張子は既に指定されています。このまま処理を続けます。",
           fileName: fileName,
           fileExt: fileExt,
-        };
+        });
       }
       // 拡張子が存在しない場合
       else {
         console.log(`.${targetExtension}拡張子が指定されていません。`);
         console.log(`.${targetExtension}拡張子を追加します。`);
 
-        const addExtFileName = `${fileName}${targetExt}`; // 拡張子を追加
+        // 拡張子の追加
+        const addExtFileName = `${fileName}${targetExt}`;
 
         // 成功時の処理
-        return {
+        return FileSystem.setResult({
           message: `${targetExt}拡張子を追加しました。`,
           originalFileName: fileName,
           fileName: addExtFileName,
           extName: targetExt,
-        };
+        });
       }
-    } catch (error) {
+    } catch (err) {
       // その他のエラーが発生した場合
-      const errorInfo = {
-        source: "unknown",
-        name: error.name,
-        message: "拡張子の追加に失敗しました。",
-        errorMessage: error.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+      throw err;
     }
   },
 
@@ -238,40 +257,34 @@ const FileSystem = {
       const pathResult = path.join(dir, fileName);
 
       // 成功時の処理
-      return {
+      return FileSystem.setResult({
         message: `${fileName}のパスを生成しました。`,
         name: pathResult,
-      };
-    } catch (error) {
-      const errorInfo = {
-        source: "createPath",
-        name: error.name,
-        message: "パスの生成に失敗しました。",
-        errorMessage: error.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+      });
+    } catch (err) {
+      throw err;
     }
   },
 
   // ディレクトリの作成
   createDir: async (dir = argv.dir) => {
     // ディレクトリの存在チェック
+    console.log(`${dir}が作成済みか確認します。`);
 
     try {
       await fs.promises.access(dir);
       // ディレクトリが存在する場合はそのまま処理を続ける
-      return {
+      return FileSystem.setResult({
         message: "ディレクトリは既に作成されています。このまま処理を続けます。",
-      };
-    } catch (error) {
-      if (error.code === "ENOENT") {
+        dir: dir,
+      });
+    } catch (err) {
+      if (err.code === "ENOENT") {
         // ディレクトリが存在しない場合は新規作成する
         console.log(`${dir}ディレクトリが存在しません。`);
-        console.log("まずは指定されたディレクトリを新規作成します。");
+        console.log("指定されたディレクトリを新規作成します。");
+        
         // ディレクトリの新規作成
-
         try {
           console.log("作成中...");
 
@@ -280,29 +293,14 @@ const FileSystem = {
           // 成功時の処理
           return {
             message: "ディレクトリ作成に成功しました。",
+            dir: dir,
           };
-        } catch (mkdirError) {
-          const errorInfo = {
-            source: "createDir",
-            name: mkdirError.name,
-            message: "ディレクトリの新規作成に失敗しました。",
-            errorMessage: mkdirError.message,
-            actionGuide: "エラーの詳細を確認してください。",
-          };
-          console.error(new Error(errorInfo.name));
-          throw errorInfo;
+        } catch (err) {
+          throw err;
         }
       } else {
         // その他のエラーが発生した場合
-        const errorInfo = {
-          source: "createDir",
-          name: error.name,
-          message: "ディレクトリの存在確認中にエラーが発生しました。",
-          errorMessage: error.message,
-          actionGuide: "エラーの詳細を確認してください。",
-        };
-        console.error(new Error(errorInfo.name));
-        throw errorInfo;
+        throw err;
       }
     }
   },
@@ -316,12 +314,15 @@ const FileSystem = {
       await fs.promises.access(path);
 
       // ファイルが存在する場合
-      return {
+      return FileSystem.setResult({
         message: `${fileName}は既に${dir}内に保存されています。このまま処理を終了します。`,
+        path: path,
+        fileName: fileName,
+        dir: dir,
         fileContent: `${fileContent.slice(0, 50)}...`, // 先頭50文字を表示
-      };
-    } catch (error) {
-      if (error.code === "ENOENT") {
+      });
+    } catch (err) {
+      if (err.code === "ENOENT") {
         // ファイルが存在しない場合
         console.log(`${fileName}が存在しない為、${dir}内に新規作成します。`);
 
@@ -334,32 +335,19 @@ const FileSystem = {
           });
 
           // 成功時の処理
-          return {
+          return FileSystem.setResult({
             message: `${fileName}を${dir}に保存しました。`,
+            path: path,
+            fileName: fileName,
+            dir: dir,
             fileContent: `${fileContent.slice(0, 50)}...`, // 先頭50文字を表示
-          };
-        } catch (writeFileError) {
-          const errorInfo = {
-            source: "createFile",
-            name: writeFileError.name,
-            message: "ファイルの生成に失敗しました。",
-            errorMessage: writeFileError.message,
-            actionGuide: "エラーの詳細を確認してください。",
-          };
-          console.error(new Error(errorInfo.name));
-          throw errorInfo;
+          });
+        } catch (err) {
+          throw err;
         }
       } else {
         // その他のエラーが発生した場合
-        const errorInfo = {
-          source: "createFile",
-          name: error.name,
-          message: "ファイルの生成に失敗しました。",
-          errorMessage: error.message,
-          actionGuide: "エラーの詳細を確認してください。",
-        };
-        console.error(new Error(errorInfo.name));
-        throw errorInfo;
+        throw err;
       }
     }
   },
