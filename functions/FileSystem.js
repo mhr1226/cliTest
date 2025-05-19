@@ -20,27 +20,6 @@ const FileSystem = {
     };
   },
 
-  // エラー情報をコンソールに出力
-  setCustomLogs: (errorInfo) => {
-    // エラー情報をセット
-    const { source, name, message, actionGuide } = errorInfo;
-
-    const errorLogs = `
-    =====エラーが発生しました。=====
-    エラー発生場所：${source || "Unknown"}
-    エラー名：${name}
-    エラーメッセージ：${message}
-    エラーガイド：${actionGuide}
-    `;
-
-    // エラー情報をコンソールに出力
-    console.error("==========================================");
-    console.error(errorLogs);
-    console.error("==========================================");
-
-    return errorInfo;
-  },
-
   // カスタムエラーのreturn
   returnCustomError: (errorInfo) => {
     // errorInfoの内容を展開
@@ -73,28 +52,43 @@ const FileSystem = {
       actionGuide,
     };
 
-    // エラーログの出力
-    FileSystem.setCustomLogs(errorInfo);
-
     // エラーオブジェクトの完成版をreturnする
     return FileSystem.returnCustomError(errorInfo);
   },
 
   // catch文でのログ出力
-  setCatchErrorLogs: (err) => {
+  setCatchErrorLogs: (err, results) => {
+    results = {
+      // 引数にresultsが渡された場合はそのまま使用
+      // 渡されなかった場合は空のオブジェクトを使用
+      ...results,
+      errorResults: {
+        name: err.customName || err.name,
+        source: err.stack.split("\n").slice(0, 2),
+        details: err,
+      },
+    };
+
+    console.error("==========================================");
+    console.error(`${results.errorResults.name}が発生しました。`);
+    console.error("処理を中断し、途中までの結果を出力します。");
+    console.error("==========================================");
+    // 結果の出力
+    console.error("結果：", results);
+    console.error("==========================================");
     // カスタムエラーの場合
     if (err.source) {
-      console.error(`カスタムエラー:\n${err.customName},\n${err.source}`);
-      console.error(err);
-      console.error(`エラー元：\n${err.stack.split("\n").slice(1, 2)}`);
+      console.error(`${err.source}で${err.customName}が発生しました。`);
+      console.error(`
+        エラー発生場所：${err.source || "Unknown"}
+        エラー名：${err.customName}
+        エラーメッセージ：${err.customMessage}
+        エラーガイド：${err.actionGuide}`);
       console.error("==========================================");
     }
     // それ以外のエラー
     else {
       console.error(`${err.name}が発生しました。`);
-      console.error("==========================================");
-      console.error("エラー詳細：\n", err);
-      console.error("エラー元：\n", err.stack.split("\n").slice(0, 2));
       console.error("==========================================");
     }
     console.error("処理を終了します。");
@@ -229,7 +223,7 @@ const FileSystem = {
       // 拡張子が存在しない場合
       else {
         console.log(`.${targetExtension}拡張子が指定されていません。`);
-        console.log(`.${targetExtension}拡張子を追加します。`);
+        console.log("拡張子を追加します。");
 
         // 拡張子の追加
         const addExtFileName = `${fileName}${targetExt}`;
@@ -283,7 +277,7 @@ const FileSystem = {
         // ディレクトリが存在しない場合は新規作成する
         console.log(`${dir}ディレクトリが存在しません。`);
         console.log("指定されたディレクトリを新規作成します。");
-        
+
         // ディレクトリの新規作成
         try {
           console.log("作成中...");

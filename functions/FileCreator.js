@@ -9,28 +9,21 @@ const FileSystem = require("./FileSystem.js");
 const FileCreator = Object.assign({}, FileSystem, {
   // コマンドライン引数の取得
   checkFileParameters: async (fileName) => {
-    console.log("checkFileParametersを実行します。");
     try {
       const [fileResult, dirResult] = await Promise.all([
         FileSystem.checkFileName(fileName),
         FileSystem.checkDir(),
       ]);
 
-      console.log("ファイル名結果：", fileResult);
-      console.log("ディレクトリ結果：", dirResult);
-
       const extResult = await FileSystem.checkExt(fileResult.name);
-      const result = {
+      
+      return FileCreator.setResult({
         fileResult,
         dirResult,
         extResult,
-      };
-      return result;
+      });
     } catch (err) {
 
-      console.error(`${err.name}のエラーを取得しました。`);
-      console.error("エラー詳細：", err);
-      
       throw err;
     }
   },
@@ -45,31 +38,17 @@ const FileCreator = Object.assign({}, FileSystem, {
         targetExtension: targetExtension,
       });
 
-      console.log("拡張子結果：", addExtResult);
-
       // パスを作成
       const createPathResult = await FileSystem.createPath({
         fileName: addExtResult.fileName,
       });
 
-      console.log("パス作成結果：", createPathResult);
-
-      const result = {
+      return FileCreator.setResult({
         addExtResult,
         createPathResult,
-      };
-      return result;
-    } catch (addExtAndCreatePathError) {
-      const errorInfo = {
-        source: "addExtAndCreatePath",
-        name: addExtAndCreatePathError.name,
-        message: "拡張子の追加とパスの作成に失敗しました。",
-        errorMessage: addExtAndCreatePathError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+      });
+    } catch (err) {
+      throw err;
     }
   },
 
@@ -78,7 +57,6 @@ const FileCreator = Object.assign({}, FileSystem, {
     try {
       // ディレクトリを作成
       const createDirResult = await FileSystem.createDir();
-      console.log("ディレクトリ作成結果：", createDirResult);
 
       // ファイルを作成
       const createFileResult = await FileSystem.createFile({
@@ -87,75 +65,29 @@ const FileCreator = Object.assign({}, FileSystem, {
         fileContent: fileContent,
       });
 
-      console.log("ファイル作成結果：", createFileResult);
-
-      const result = {
+      return FileCreator.setResult({
         createDirResult,
         createFileResult,
-      };
-
-      return result;
-    } catch (createFileAndDirError) {
-      const errorInfo = {
-        source: "createFileAndDir",
-        name: createFileAndDirError.name,
-        message: "ディレクトリとファイルの作成に失敗しました。",
-        errorMessage: createFileAndDirError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+      });
+    } catch (err) {
+      throw err;
     }
   },
 
-  // エラー処理
-  // handleError: (error) => {
-  //   try {
-  //     // errorが存在しない、または予期しない型の場合
-  //     if (!error || typeof error !== "object") {
-  //       console.error(
-  //         "不明なエラーが発生しました。エラーオブジェクトが存在しません。"
-  //       );
-  //       console.error("処理を終了します。");
-  //     }
-  //     // error.sourceが存在しない場合
-  //     else if (!error.source) {
-  //       // エラーの発生場所を特定する
-  //       try {
-  //         // 2行目（エラー発生元）のスタック情報とエラー全体の取得
-  //         const secondStack = error.stack.split("\n")[1];
-  //         console.error(`${secondStack}でエラーが発生しています。`);
-  //         console.error("エラー詳細：", error);
-  //         console.error("処理を終了します。");
-  //       } catch (getStackError) {
-  //         // stackプロパティの取得に失敗した場合
-  //         console.error("スタック情報の取得に失敗しました。");
-  //         console.error("エラー詳細：", getStackError);
-  //         console.error("処理を終了します。");
-  //         return;
-  //       }
-  //     } else {
-  //       // 通常のエラー発生時の処理
-  //       console.error(`${error.source}でエラーが発生しています。`);
-  //       console.error("エラー詳細：", error);
-  //       console.error("処理を終了します。");
-  //     }
-  //   } catch (handleError) {
-  //     // エラー処理中にエラーが発生した場合
-  //     console.error("エラー処理中にエラーが発生しました。");
-  //     console.error("エラー詳細：", handleError);
-  //     console.error("処理を終了します。");
-  //     return;
-  //   }
-  //   return;
-  // },
-
   // ファイル生成：一連の処理
-  createAll: async ({ fileParameter, targetExtension, fileContent }) => {
+  createAll: async ({ fileName, targetExtension, fileContent }) => {
+
+    // 結果保存用の変数
+    let results = {};
+
     try {
       // ファイル名、ディレクトリ、拡張子の確認
-      const checkResult = await FileCreator.checkFileParameters(fileParameter);
+      const checkResult = await FileCreator.checkFileParameters(fileName);
+
+      // 結果の保存
+      results = {
+        checkResult,
+      };
 
       const { fileResult, extResult } = checkResult;
 
@@ -166,6 +98,12 @@ const FileCreator = Object.assign({}, FileSystem, {
         targetExtension: targetExtension,
       });
 
+      // 結果の保存
+      results = {
+        ...results,
+        addExtAndPathResult,
+      };
+
       const { addExtResult, createPathResult } = addExtAndPathResult;
 
       // ディレクトリとファイルを作成
@@ -175,19 +113,22 @@ const FileCreator = Object.assign({}, FileSystem, {
         fileContent: fileContent,
       });
 
-      const result = {
-        checkResult,
-        addExtAndPathResult,
+      // 結果の保存
+      results = {
+        ...results,
         createFileAndDirResult,
       };
 
+      // 最終結果の出力
+      console.log("===================================");
+      console.log("処理結果を出力します。");
+      console.log("最終結果：", results);
       console.log("全ての処理が完了したので、終了します。");
 
-      return result;
+      return results;
     } catch (err) {
-      // 不明なエラー発生時の処理
-      console.log(`createAllのエラー出力を確認します。`);
-      console.error(JSON.stringify(err));
+      // エラー内容の出力と最終結果の出力
+      FileCreator.setCatchErrorLogs(err, results);
       throw err;
     }
   },
