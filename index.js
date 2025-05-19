@@ -6,52 +6,46 @@ const argv = require("./option.js");
 
 const createTest = async () => {
 
+  let results = {};
+
   try {
 
-    await FileCreator.createAll({
-    fileName: argv.html,
-    targetExtension: "html",
-    fileContent: argv.htmlContent,
-  });
+    // HTMLとCSSファイルを同時生成
+    const [htmlResult, cssResult] = await Promise.all([
+      HtmlCreator.createHtml(),
+      CssCreator.createCss(),
+    ]);
+
+    const htmlTotalResult = htmlResult.totalResult;
+    const cssTotalResult = cssResult.totalResult;
+
+    // 結果の保存
+    results = {
+      htmlResult,
+      cssResult,
+    }
+    
+    // 作成したCSSファイルをHTMLファイルに読み込む
+    const loadCss = await HtmlCreator.loadCssoHtml({
+      htmlFileName: htmlTotalResult.addExtAndPathResult.addExtResult.fileName,
+      cssFileName: cssTotalResult.addExtAndPathResult.addExtResult.fileName,
+      htmlPath: htmlTotalResult.addExtAndPathResult.createPathResult.name,
+    });
+
+    // 結果の保存
+    results = {
+      ...results,
+      loadCss
+    }
+
+    console.log("全ての処理が完了したので、終了します。");
 
   } catch (err) {
     // 関数の終点
-    
+    setTimeout(() => {
+      FileCreator.setCatchErrorLogs(err, results);
+    });
   }
 };
 
 createTest();
-
-// const main = async () => {
-//   try {
-//     // HTMLとCSSファイルを同時生成
-//     const createHtmlAndCss = await Promise.all([
-//       HtmlCreator.createHtml(),
-//       CssCreator.createCss(),
-//     ]);
-
-//     const result = {
-//       htmlName: createHtmlAndCss[0].htmlName,
-//       htmlPath: createHtmlAndCss[0].htmlPath,
-//       cssName: createHtmlAndCss[1].cssName,
-//     };
-
-//     // 作成したCSSファイルをHTMLファイルに読み込む
-//     const loadCss = await HtmlCreator.loadCssToHtml({
-//       htmlFileName: result.htmlName,
-//       cssFileName: result.cssName,
-//       path: result.htmlPath,
-//     });
-
-//     console.log("生成結果：", result);
-
-//     return result;
-//   } catch (err) {
-//     // エラー情報をセット
-//     console.log(`mainのエラー出力を確認します。`);
-//     console.error(JSON.stringify(err));
-//     throw FileCreator.setError(err);
-//   }
-// };
-
-// main();

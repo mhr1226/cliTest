@@ -9,37 +9,36 @@ const FileCreator = require("./FileCreator.js");
 // ==================================
 
 // CSSファイルの生成
-const CssCreator = Object.assign({}, FileCreator, {
+const CssCreator = {
+  ...FileCreator,
+
   createCss: async () => {
     const cssName = argv.css; // cssファイル名
     const cssExt = "css"; // cssファイルの拡張子
     const cssContent = argv.cssContent; // cssファイルの内容
 
+    console.log("CSSファイルの生成を開始します。");
+
     try {
       const css = await FileCreator.createAll({
-        fileParameter: cssName,
+        fileName: cssName,
         targetExtension: cssExt,
         fileContent: cssContent,
       });
 
-      const result = {
-        cssName: css.addExtAndPathResult.addExtResult.fileName,
-      };
-
+      const result = CssCreator.setResult({
+        message: `${cssName}の生成に成功しました。`,
+        totalResult: css,
+        cssName: css.addExtAndPathResult.addExtResult.fileName
+      });
+      console.log("===================================");
+      console.log(`${cssName}の生成結果:\n`, result.totalResult);
       return result;
-    } catch (createCssError) {
-      const errorInfo = {
-        source: "createCss",
-        name: createCssError.name,
-        message: "CSSファイルの生成に失敗しました。",
-        errorMessage: createCssError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+    } catch (err) {
+      
+      throw err;
     }
   },
-});
+};
 
 module.exports = CssCreator;

@@ -9,91 +9,73 @@ const FileCreator = require("./FileCreator.js");
 // ==================================
 
 // HTMLのファイル生成
-const HtmlCreator = Object.assign({}, FileCreator, {
-  // プロパティの定義
-  htmlName: argv.html, // HTMLファイル名
-  htmlExt: "html", // HTMLファイルの拡張子
-  htmlContent: argv.htmlContent, // HTMLファイルの内容
+const HtmlCreator = {
+  ...FileCreator,
 
   createHtml: async () => {
     const htmlName = argv.html; // HTMLファイル名
     const htmlExt = "html"; // HTMLファイルの拡張子
     const htmlContent = argv.htmlContent; // HTMLファイルの内容
 
+    console.log("HTMLファイルの生成を開始します。");
+
     try {
       const html = await FileCreator.createAll({
-        fileParameter: htmlName,
+        fileName: htmlName,
         targetExtension: htmlExt,
         fileContent: htmlContent,
       });
 
-      const result = {
+
+      const result = HtmlCreator.setResult({
+        message: `${htmlName}の生成に成功しました。`,
+        totalResult: html,
         htmlName: html.addExtAndPathResult.addExtResult.fileName,
         htmlPath: html.addExtAndPathResult.createPathResult.name,
-      };
-
+      });
+      console.log("===================================");
+      console.log(`${htmlName}の生成結果:\n`, result.totalResult);
       return result;
+
     } catch (err) {
-      // エラー情報をセット
-      console.log(`createHtmlのエラー出力を確認します。`);
-      console.error(JSON.stringify(err));
       throw err;
     }
   },
   // CSSファイルをHTMLファイルに読み込む
-  loadCssToHtml: async ({ htmlFileName, cssFileName, path }) => {
-    console.log(`作成した${htmlFileName}に${cssFileName}に読み込みます。`);
+  loadCssToHtml: async ({ htmlFileName, cssFileName, htmlPath }) => {
+    console.log(`作成した${htmlFileName}に${cssFileName}を読み込みます。`);
     try {
       // HTMLファイルの読み込み
-      console.log(`${htmlFileName}を読み込み中...`);
-      const htmlContent = await fs.promises.readFile(path, {
+      const htmlContent = await fs.promises.readFile(htmlPath, {
         encoding: "utf-8",
       });
-      console.log(`${htmlFileName}の読み込みが完了しました。`);
 
       // HTMLの書き換え
-
-      console.log(
-        `続いて${htmlFileName}内に${cssFileName}の相対パスを差し込みます。`
-      );
-      console.log("書き換え中...");
       const updatedHtmlContent = htmlContent.replace(
         "</head>",
         `  <link rel="stylesheet" href="./${cssFileName}">\n</head>`
       );
-      console.log(`${htmlFileName}の書き換えに成功しました。`);
 
       // 書き換えた内容を保存する
-      console.log(`書き換えた内容を${htmlFileName}に保存します。`);
-      console.log("保存中...");
-      // HTMLファイルの上書き保存
-      await fs.promises.writeFile(path, updatedHtmlContent, {
+      await fs.promises.writeFile(htmlPath, updatedHtmlContent, {
         encoding: "utf-8",
       });
-      console.log(`${htmlFileName}の保存完了。`);
-      console.log(`CSSファイルをHTMLファイルに読み込みました。`);
 
-      return {
-        message: `${htmlFileName}に${cssFileName}を読み込みました。`,
+      const result = HtmlCreator.setResult({
+        message: `${htmlFileName}に${cssFileName}の読み込みに成功しました。`,
         htmlFileName: htmlFileName,
-        pathName: path,
+        htmlPathName: htmlPath,
         cssFileName: cssFileName,
-        beforeContent: htmlContent,
-        updatedContent: updatedHtmlContent,
-      };
-    } catch (loadCssError) {
-      const errorInfo = {
-        source: "loadCssToHtml",
-        name: loadCssError.name,
-        message: "処理中にエラーが発生しました。",
-        errorMessage: loadCssError.message,
-        actionGuide: "エラーの詳細を確認してください。",
-      };
-
-      console.error(new Error(errorInfo.name));
-      throw errorInfo;
+        beforeHtmlContent: htmlContent.slice(0, 50) + "...", // 先頭50文字を表示
+        updatedHtmlContent: updatedHtmlContent.slice(0, 50) + "...", // 先頭50文字を表示
+      });
+      console.log("===================================");
+      console.log(`${htmlFileName}→${cssFileName}の読み込み結果:\n`, result);
+      return result;
+    } catch (err) {
+      throw err;
     }
   },
-});
+};
 
 module.exports = HtmlCreator;

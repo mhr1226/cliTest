@@ -6,7 +6,8 @@ const FileSystem = require("./FileSystem.js");
 // ファイル生成汎用メソッド
 // ベースメソッドはFileSystem.jsに定義
 // ==================================
-const FileCreator = Object.assign({}, FileSystem, {
+const FileCreator = {
+  ...FileSystem, 
   // コマンドライン引数の取得
   checkFileParameters: async (fileName) => {
     try {
@@ -23,7 +24,6 @@ const FileCreator = Object.assign({}, FileSystem, {
         extResult,
       });
     } catch (err) {
-
       throw err;
     }
   },
@@ -119,12 +119,6 @@ const FileCreator = Object.assign({}, FileSystem, {
         createFileAndDirResult,
       };
 
-      // 最終結果の出力
-      console.log("===================================");
-      console.log("処理結果を出力します。");
-      console.log("最終結果：", results);
-      console.log("全ての処理が完了したので、終了します。");
-
       return results;
     } catch (err) {
       // エラー内容の出力と最終結果の出力
@@ -132,6 +126,6 @@ const FileCreator = Object.assign({}, FileSystem, {
       throw err;
     }
   },
-});
+};
 
 module.exports = FileCreator;
