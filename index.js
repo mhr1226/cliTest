@@ -42,9 +42,6 @@ const createTest = async () => {
 
   } catch (err) {
     // 関数の終点
-    setTimeout(() => {
-      FileCreator.setCatchErrorLogs(err, results);
-    });
   }
 };
 

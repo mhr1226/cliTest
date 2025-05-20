@@ -69,7 +69,6 @@ const FileSystem = {
       },
     };
 
-    setTimeout(() => {
       console.error("==========================================");
       console.error(`${results.errorResults.name}が発生しました。`);
       console.error("処理を中断し、途中までの結果を出力します。");
@@ -93,7 +92,6 @@ const FileSystem = {
         console.error("==========================================");
       }
       console.error("処理を終了します。");
-    }, 1000); // 1秒後にエラーを出力
 
     return err;
   },
