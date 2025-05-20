@@ -6,95 +6,88 @@ const FileSystem = require("./FileSystem.js");
 // ファイル生成汎用メソッド
 // ベースメソッドはFileSystem.jsに定義
 // ==================================
-const FileCreator = Object.assign({}, FileSystem, {
+const FileCreator = {
+  ...FileSystem, 
   // コマンドライン引数の取得
   checkFileParameters: async (fileName) => {
-    const [fileResult, dirResult] = await Promise.all([
-      FileSystem.checkFileName(fileName),
-      FileSystem.checkDir(),
-    ]);
+    try {
+      const [fileResult, dirResult] = await Promise.all([
+        FileSystem.checkFileName(fileName),
+        FileSystem.checkDir(),
+      ]);
 
-    console.log("ファイル名結果：", fileResult);
-    console.log("ディレクトリ結果：", dirResult);
-
-    const extResult = await FileSystem.checkExt(fileResult.name);
-    const result = {
-      fileResult,
-      dirResult,
-      extResult,
-    };
-    return result;
+      const extResult = await FileSystem.checkExt(fileResult.name);
+      
+      return FileCreator.setResult({
+        fileResult,
+        dirResult,
+        extResult,
+      });
+    } catch (err) {
+      throw err;
+    }
   },
 
   // 拡張子を追加してパスを作成
   addExtAndCreatePath: async ({ fileName, extName, targetExtension }) => {
-    // 拡張子を追加
-    const addExtResult = await FileSystem.addExt({
-      fileName: fileName,
-      fileExt: extName,
-      targetExtension: targetExtension,
-    });
+    try {
+      // 拡張子を追加
+      const addExtResult = await FileSystem.addExt({
+        fileName: fileName,
+        fileExt: extName,
+        targetExtension: targetExtension,
+      });
 
-    console.log("拡張子結果：", addExtResult);
+      // パスを作成
+      const createPathResult = await FileSystem.createPath({
+        fileName: addExtResult.fileName,
+      });
 
-    // パスを作成
-    const createPathResult = await FileSystem.createPath({
-      fileName: addExtResult.fileName,
-    });
-
-    console.log("パス作成結果：", createPathResult);
-
-    const result = {
-      addExtResult,
-      createPathResult,
-    };
-    return result;
+      return FileCreator.setResult({
+        addExtResult,
+        createPathResult,
+      });
+    } catch (err) {
+      throw err;
+    }
   },
 
   // ディレクトリとファイルを作成
   createFileAndDir: async ({ path, fileName, fileContent }) => {
-    // ディレクトリを作成
-    const createDirResult = await FileSystem.createDir();
-    console.log("ディレクトリ作成結果：", createDirResult);
+    try {
+      // ディレクトリを作成
+      const createDirResult = await FileSystem.createDir();
 
-    // ファイルを作成
-    const createFileResult = await FileSystem.createFile({
-      path: path,
-      fileName: fileName,
-      fileContent: fileContent,
-    });
+      // ファイルを作成
+      const createFileResult = await FileSystem.createFile({
+        path: path,
+        fileName: fileName,
+        fileContent: fileContent,
+      });
 
-    console.log("ファイル作成結果：", createFileResult);
-
-    const result = {
-      createDirResult,
-      createFileResult,
-    };
-
-    return result;
-  },
-
-  // エラー処理
-  handleError: (error) => {
-    if (!error.source || error.source === undefined) {
-      // エラーの発生場所
-      const secondStack = error.stack.split("\n")[1];
-      console.error(`${secondStack}でエラーが発生しています。`);
-      console.error("エラー詳細：", error);
-      console.error("処理を終了します。");
-    } else {
-      // 通常のエラー発生時の処理
-      console.error(`${error.source}でエラーが発生しています。`);
-      console.error("エラー詳細：", error);
-      console.error("処理を終了します。");
+      return FileCreator.setResult({
+        createDirResult,
+        createFileResult,
+      });
+    } catch (err) {
+      throw err;
     }
   },
 
   // ファイル生成：一連の処理
-  createAll: async ({ fileParameter, targetExtension, fileContent }) => {
+  createAll: async ({ fileName, targetExtension, fileContent }) => {
+
+    // 結果保存用の変数
+    let results = {};
+
     try {
       // ファイル名、ディレクトリ、拡張子の確認
-      const checkResult = await FileCreator.checkFileParameters(fileParameter);
+      const checkResult = await FileCreator.checkFileParameters(fileName);
+
+      // 結果の保存
+      results = {
+        checkResult,
+      };
 
       const { fileResult, extResult } = checkResult;
 
@@ -105,6 +98,12 @@ const FileCreator = Object.assign({}, FileSystem, {
         targetExtension: targetExtension,
       });
 
+      // 結果の保存
+      results = {
+        ...results,
+        addExtAndPathResult,
+      };
+
       const { addExtResult, createPathResult } = addExtAndPathResult;
 
       // ディレクトリとファイルを作成
@@ -114,20 +113,19 @@ const FileCreator = Object.assign({}, FileSystem, {
         fileContent: fileContent,
       });
 
-      const result = {
-        checkResult,
-        addExtAndPathResult,
+      // 結果の保存
+      results = {
+        ...results,
         createFileAndDirResult,
       };
 
-      console.log("全ての処理が完了したので、終了します。");
-
-      return result;
-    } catch (error) {
-      // 不明なエラー発生時の処理
-      FileCreator.handleError(error);
+      return results;
+    } catch (err) {
+      // エラー内容の出力と最終結果の出力
+      FileCreator.setCatchErrorLogs(err, results);
+      throw err;
     }
   },
-});
+};
 
 module.exports = FileCreator;
