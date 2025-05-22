@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const argv = require("../option.js");
+const { error } = require("node:console");
 
 // ファイル生成オリジナル
 const FileSystem = {
@@ -58,40 +59,43 @@ const FileSystem = {
 
   // catch文でのログ出力
   setCatchErrorLogs: (err, results) => {
-    results = {
+    // 成功した処理結果の取得
+    const successResults = {
       // 引数にresultsが渡された場合はそのまま使用
       // 渡されなかった場合は空のオブジェクトを使用
       ...results,
-      errorResults: {
-        name: err.customName || err.name,
-        source: err.stack.split("\n").slice(0, 2),
-        details: err,
-      },
     };
 
-      console.error("==========================================");
-      console.error(`${results.errorResults.name}が発生しました。`);
-      console.error("処理を中断し、途中までの結果を出力します。");
-      console.error("==========================================");
-      // 結果の出力
-      console.error("結果：", results);
-      console.error("==========================================");
-      // カスタムエラーの場合
-      if (err.source) {
-        console.error(`${err.source}で${err.customName}が発生しました。`);
-        console.error(`
+    const errorResults = {
+      name: err.customName || err.name,
+      source: err.stack.split("\n").slice(0, 2),
+      details: err,
+    };
+
+    console.error("==========================================");
+    console.error(`${errorResults.name}が発生しました。`);
+    console.error("発生場所：\n",errorResults.source);
+    console.error("処理を中断し、途中までの結果を出力します。");
+    console.error("==========================================");
+    // 結果の出力
+    console.error("途中結果：", successResults);
+    console.error("==========================================");
+    // カスタムエラーの場合
+    if (err.source) {
+      console.error(`${err.source}で${err.customName}が発生しました。`);
+      console.error(`
         エラー発生場所：${err.source || "Unknown"}
         エラー名：${err.customName}
         エラーメッセージ：${err.customMessage}
         エラーガイド：${err.actionGuide}`);
-        console.error("==========================================");
-      }
-      // それ以外のエラー
-      else {
-        console.error(`${err.name}が発生しました。`);
-        console.error("==========================================");
-      }
-      console.error("処理を終了します。");
+      console.error("==========================================");
+    }
+    // それ以外のエラー
+    else {
+      console.error(`${err.name}が発生しました。`);
+    }
+    console.error("処理を終了します。");
+    console.error("==========================================");
 
     return err;
   },
@@ -103,7 +107,6 @@ const FileSystem = {
 
   // ファイルの入力チェック
   checkFileName: async (fileName) => {
-
     try {
       // ファイル名の入力チェック
       if (!fileName) {
@@ -141,7 +144,6 @@ const FileSystem = {
 
   // ディレクトリの入力チェック
   checkDir: async (dir = argv.dir) => {
-
     try {
       // dirに空文字列の場合にはエラーを返す
       if (!dir) {
@@ -174,7 +176,6 @@ const FileSystem = {
 
   // ファイルの拡張子チェック
   checkExt: async (fileName) => {
-
     // 入力値の検証
     if (!fileName) {
       throw FileSystem.setCustomErrorAll({
@@ -295,7 +296,6 @@ const FileSystem = {
 
   // ファイルの作成
   createFile: async ({ path, fileName, dir = argv.dir, fileContent } = {}) => {
-
     try {
       // ファイルの存在チェック
       await fs.promises.access(path);

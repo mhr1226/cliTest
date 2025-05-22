@@ -122,7 +122,7 @@ const FileCreator = {
       return results;
     } catch (err) {
       // エラー内容の出力と最終結果の出力
-      FileCreator.setCatchErrorLogs(err, results);
+      err.result = results;
       throw err;
     }
   },

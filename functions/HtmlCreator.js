@@ -26,17 +26,13 @@ const HtmlCreator = {
         fileContent: htmlContent,
       });
 
-
       const result = HtmlCreator.setResult({
         message: `${htmlName}の生成に成功しました。`,
         totalResult: html,
         htmlName: html.addExtAndPathResult.addExtResult.fileName,
         htmlPath: html.addExtAndPathResult.createPathResult.name,
       });
-      console.log("===================================");
-      console.log(`${htmlName}の生成結果:\n`, result.totalResult);
       return result;
-
     } catch (err) {
       throw err;
     }
@@ -50,28 +46,45 @@ const HtmlCreator = {
         encoding: "utf-8",
       });
 
-      // HTMLの書き換え
-      const updatedHtmlContent = htmlContent.replace(
-        "</head>",
-        `  <link rel="stylesheet" href="./${cssFileName}">\n</head>`
-      );
+      // CSSファイルの読み込みチェック
+      if (htmlContent.includes(".css")) {
+        const result = HtmlCreator.setResult({
+          message: `${htmlFileName}には既に${cssFileName}が読み込まれています。\nこのまま処理を終了します。`,
+          htmlFileName: htmlFileName,
+          htmlPathName: htmlPath,
+          cssFileName: cssFileName,
+          htmlContent: htmlContent.slice(0, 50) + "...", // 先頭50文字を表示
+        });
+        console.log("===================================");
+        console.log(result.message);
+        console.log("===================================");
+        return result;
+      }
+      // CSSファイルの読み込みがまだの場合
+      else {
+        // HTMLの書き換え
+        const updatedHtmlContent = htmlContent.replace(
+          "</head>",
+          `  <link rel="stylesheet" href="./${cssFileName}">\n</head>`
+        );
 
-      // 書き換えた内容を保存する
-      await fs.promises.writeFile(htmlPath, updatedHtmlContent, {
-        encoding: "utf-8",
-      });
+        // 書き換えた内容を保存する
+        await fs.promises.writeFile(htmlPath, updatedHtmlContent, {
+          encoding: "utf-8",
+        });
 
-      const result = HtmlCreator.setResult({
-        message: `${htmlFileName}に${cssFileName}の読み込みに成功しました。`,
-        htmlFileName: htmlFileName,
-        htmlPathName: htmlPath,
-        cssFileName: cssFileName,
-        beforeHtmlContent: htmlContent.slice(0, 50) + "...", // 先頭50文字を表示
-        updatedHtmlContent: updatedHtmlContent.slice(0, 50) + "...", // 先頭50文字を表示
-      });
-      console.log("===================================");
-      console.log(`${htmlFileName}→${cssFileName}の読み込み結果:\n`, result);
-      return result;
+        const result = HtmlCreator.setResult({
+          message: `${htmlFileName}に${cssFileName}の読み込みに成功しました。`,
+          htmlFileName: htmlFileName,
+          htmlPathName: htmlPath,
+          cssFileName: cssFileName,
+          beforeHtmlContent: htmlContent.slice(0, 50) + "...", // 先頭50文字を表示
+          updatedHtmlContent: updatedHtmlContent.slice(0, 50) + "...", // 先頭50文字を表示
+        });
+        console.log("===================================");
+        console.log(`${htmlFileName}→${cssFileName}の読み込み結果:\n`, result);
+        return result;
+      }
     } catch (err) {
       throw err;
     }
