@@ -26,11 +26,13 @@ const HtmlCreator = {
         fileContent: htmlContent,
       });
 
+      const { addExtResult, createPathResult } = html;
+
       const result = HtmlCreator.setResult({
-        message: `${htmlName}の生成に成功しました。`,
+        message: `${addExtResult.fileName}の生成に成功しました。`,
         totalResult: html,
-        htmlName: html.addExtAndPathResult.addExtResult.fileName,
-        htmlPath: html.addExtAndPathResult.createPathResult.name,
+        htmlName: addExtResult.fileName,
+        htmlPath: createPathResult.name,
       });
       return result;
     } catch (err) {

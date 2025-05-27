@@ -7,7 +7,7 @@ const FileSystem = require("./FileSystem.js");
 // ベースメソッドはFileSystem.jsに定義
 // ==================================
 const FileCreator = {
-  ...FileSystem, 
+  ...FileSystem,
   // コマンドライン引数の取得
   checkFileParameters: async (fileName) => {
     try {
@@ -17,11 +17,11 @@ const FileCreator = {
       ]);
 
       const extResult = await FileSystem.checkExt(fileResult.name);
-      
+
       return FileCreator.setResult({
         fileResult,
-        dirResult,
         extResult,
+        dirResult,
       });
     } catch (err) {
       throw err;
@@ -76,20 +76,22 @@ const FileCreator = {
 
   // ファイル生成：一連の処理
   createAll: async ({ fileName, targetExtension, fileContent }) => {
-
     // 結果保存用の変数
     let results = {};
 
+    // 結果保存用の変数
+    const successResults = [];
+
     try {
       // ファイル名、ディレクトリ、拡張子の確認
-      const checkResult = await FileCreator.checkFileParameters(fileName);
+      const checkResults = await FileCreator.checkFileParameters(fileName);
 
       // 結果の保存
       results = {
-        checkResult,
-      };
+        ...checkResults
+      }
 
-      const { fileResult, extResult } = checkResult;
+      const { fileResult, extResult } = checkResults;
 
       // 拡張子を追加してパスを作成
       const addExtAndPathResult = await FileCreator.addExtAndCreatePath({
@@ -101,8 +103,8 @@ const FileCreator = {
       // 結果の保存
       results = {
         ...results,
-        addExtAndPathResult,
-      };
+        ...addExtAndPathResult
+      }
 
       const { addExtResult, createPathResult } = addExtAndPathResult;
 
@@ -116,13 +118,12 @@ const FileCreator = {
       // 結果の保存
       results = {
         ...results,
-        createFileAndDirResult,
-      };
-
+        ...createFileAndDirResult
+      }
       return results;
     } catch (err) {
       // エラー内容の出力と最終結果の出力
-      err.result = results;
+      err.results = results;
       throw err;
     }
   },

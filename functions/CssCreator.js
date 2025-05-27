@@ -27,14 +27,15 @@ const CssCreator = {
         fileContent: cssName === "style.css" ? cssContent : "",
       });
 
+      const { addExtResult } = css;
+
       const result = CssCreator.setResult({
-        message: `${cssName}の生成に成功しました。`,
+        message: `${addExtResult.fileName}の生成に成功しました。`,
         totalResult: css,
-        cssName: css.addExtAndPathResult.addExtResult.fileName
+        cssName: addExtResult.fileName,
       });
       return result;
     } catch (err) {
-      
       throw err;
     }
   },
