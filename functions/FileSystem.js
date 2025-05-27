@@ -26,7 +26,7 @@ const FileSystem = {
     const { source, name, message, actionGuide } = errorInfo;
 
     // エラーオブジェクトの作成
-    const error = new Error(actionGuide);
+    const error = new Error(name);
 
     // errorの拡張
     error.source = source;
@@ -56,44 +56,37 @@ const FileSystem = {
     return FileSystem.returnCustomError(errorInfo);
   },
 
-  // catch文でのログ出力
-  setCatchErrorLogs: (err, results) => {
-    results = {
-      // 引数にresultsが渡された場合はそのまま使用
-      // 渡されなかった場合は空のオブジェクトを使用
-      ...results,
-      errorResults: {
-        name: err.customName || err.name,
-        source: err.stack.split("\n").slice(0, 2),
-        details: err,
-      },
-    };
+  // エラーリストのエラーオブジェクト化
+  setTotalError: async (err, errorName) => {
+    const error = new Error("ファイル生成中にエラーが発生しました。");
 
-      console.error("==========================================");
-      console.error(`${results.errorResults.name}が発生しました。`);
-      console.error("処理を中断し、途中までの結果を出力します。");
-      console.error("==========================================");
-      // 結果の出力
-      console.error("結果：", results);
-      console.error("==========================================");
+    error.details = err;
+    error.errorName = errorName;
+
+    return error;
+  },
+
+  // 収集したエラーのログ出力
+  setErrorLogs: async (err) => {
+    // エラーリスト内のループ処理
+    err.details.map((err, index) => {
       // カスタムエラーの場合
       if (err.source) {
-        console.error(`${err.source}で${err.customName}が発生しました。`);
-        console.error(`
-        エラー発生場所：${err.source || "Unknown"}
-        エラー名：${err.customName}
-        エラーメッセージ：${err.customMessage}
-        エラーガイド：${err.actionGuide}`);
-        console.error("==========================================");
-      }
-      // それ以外のエラー
-      else {
+        console.error(`${err.source}で${err.customName}が発生しました。\n`);
+        console.error("エラー名：", err.customName);
+        console.error("エラーの発生元：", err.source);
+        console.error("エラーの内容：", err.customMessage);
+        console.error("エラーの対処方法：", err.actionGuide);
+      } else {
         console.error(`${err.name}が発生しました。`);
-        console.error("==========================================");
       }
-      console.error("処理を終了します。");
+      // 結果の出力
+      console.error("処理を中断し、途中までの結果を出力します。\n");
 
-    return err;
+      console.error("===========================================");
+      console.error("途中結果：", err.results, "\n");
+      console.error("エラー詳細：\n", err);
+    });
   },
 
   // 成功時のオブジェクトを作成
@@ -103,7 +96,6 @@ const FileSystem = {
 
   // ファイルの入力チェック
   checkFileName: async (fileName) => {
-
     try {
       // ファイル名の入力チェック
       if (!fileName) {
@@ -141,13 +133,12 @@ const FileSystem = {
 
   // ディレクトリの入力チェック
   checkDir: async (dir = argv.dir) => {
-
     try {
       // dirに空文字列の場合にはエラーを返す
       if (!dir) {
         throw FileSystem.setCustomErrorAll({
           source: "checkDir",
-          nme: "InvalidDirError",
+          name: "InvalidDirError",
           message: "ディレクトリ名が未指定、もしくは無効なディレクトリ名です。",
           actionGuide: "ディレクトリ名を修正してください。",
         });
@@ -174,7 +165,6 @@ const FileSystem = {
 
   // ファイルの拡張子チェック
   checkExt: async (fileName) => {
-
     // 入力値の検証
     if (!fileName) {
       throw FileSystem.setCustomErrorAll({
@@ -295,7 +285,6 @@ const FileSystem = {
 
   // ファイルの作成
   createFile: async ({ path, fileName, dir = argv.dir, fileContent } = {}) => {
-
     try {
       // ファイルの存在チェック
       await fs.promises.access(path);
