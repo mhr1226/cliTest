@@ -34,6 +34,7 @@ const CssCreator = {
         totalResult: css,
         cssName: addExtResult.fileName,
       });
+      console.log(result.message);
       return result;
     } catch (err) {
       throw err;

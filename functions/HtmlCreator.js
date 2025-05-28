@@ -34,13 +34,14 @@ const HtmlCreator = {
         htmlName: addExtResult.fileName,
         htmlPath: createPathResult.name,
       });
+      console.log(result.message);
       return result;
     } catch (err) {
       throw err;
     }
   },
   // CSSファイルをHTMLファイルに読み込む
-  loadCssToHtml: async ({ htmlFileName, cssFileName, htmlPath }) => {
+  loadCssToHtml: async ({ htmlFileName, cssFileName, htmlPath } = {}) => {
     console.log(`作成した${htmlFileName}に${cssFileName}を読み込みます。`);
     try {
       // HTMLファイルの読み込み
