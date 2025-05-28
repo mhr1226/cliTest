@@ -29,7 +29,7 @@ const FileCreator = {
   },
 
   // 拡張子を追加してパスを作成
-  addExtAndCreatePath: async ({ fileName, extName, targetExtension }) => {
+  addExtAndCreatePath: async ({ fileName, extName, targetExtension } = {}) => {
     try {
       // 拡張子を追加
       const addExtResult = await FileSystem.addExt({
@@ -53,7 +53,7 @@ const FileCreator = {
   },
 
   // ディレクトリとファイルを作成
-  createFileAndDir: async ({ path, fileName, fileContent }) => {
+  createFileAndDir: async ({ path, fileName, fileContent } = {}) => {
     try {
       // ディレクトリを作成
       const createDirResult = await FileSystem.createDir();
@@ -75,7 +75,7 @@ const FileCreator = {
   },
 
   // ファイル生成：一連の処理
-  createAll: async ({ fileName, targetExtension, fileContent }) => {
+  createAll: async ({ fileName, targetExtension, fileContent } = {}) => {
     // 結果保存用の変数
     let results = {};
 
