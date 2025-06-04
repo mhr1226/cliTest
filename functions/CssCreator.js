@@ -1,7 +1,6 @@
 const fs = require("node:fs");
 const argv = require("../option.js");
 const FileCreator = require("./FileCreator.js");
-const { css } = require("../datas/filesDefaultData.js");
 
 // ==================================
 // CSS生成汎用メソッド

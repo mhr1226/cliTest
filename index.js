@@ -1,6 +1,7 @@
 const FileCreator = require("./functions/FileCreator.js");
 const HtmlCreator = require("./functions/HtmlCreator.js");
 const CssCreator = require("./functions/CssCreator.js");
+const serverSystem = require("./functions/serverSystem.js");
 
 const argv = require("./option.js");
 
@@ -98,35 +99,51 @@ const createTest = async () => {
     if (htmlSuccess && cssSuccess) {
       console.log("HTMLとCSSファイルの生成に成功しました。");
       // 作成したCSSファイルをHTMLファイルに読み込む
-      const loadCss = await HtmlCreator.loadCssToHtml({
-        htmlFileName: settledHtmlResult.addExtResult.fileName,
-        cssFileName: settledCssResult.addExtResult.fileName,
-        htmlPath: settledHtmlResult.createPathResult.name,
-      });
-      // 結果の保存
-      await setTotalResults({
-        result: loadCss,
-        errors: errorResults,
-        successResults: successResults,
-        errorName: "loadCssError",
-        successName: "loadCssSuccess",
-      });
 
-      // 結果の出力
-      console.log("最終結果：");
-      successResults.map((result, index) => {
-        console.log(
-          `${
-            result.successName ? result.successName : result.Promise.successName
-          }結果:`,
-          result.totalResult
-        );
-      });
-      console.log("全ての処理が完了したので、終了します。");
+      try {
+        const loadCss = await HtmlCreator.loadCssToHtml({
+          htmlFileName: settledHtmlResult.addExtResult.fileName,
+          cssFileName: settledCssResult.addExtResult.fileName,
+          htmlPath: settledHtmlResult.createPathResult.name,
+        });
+        // 結果の保存
+        const settledLoadCssResult = await setTotalResults({
+          result: loadCss,
+          errors: errorResults,
+          successResults: successResults,
+          errorName: "loadCssError",
+          successName: "loadCssSuccess",
+        });
+
+        if (settledLoadCssResult.success) {
+          console.log("CSSファイルの読み込みに成功しました。");
+          // サーバーの起動
+          console.log("サーバーを起動します。");
+
+          try {
+            const serverResult = await serverSystem.startServer({
+              fileDir: settledHtmlResult.dirResult.dir,
+              htmlFileName: settledHtmlResult.addExtResult.fileName,
+            });
+            // サーバー起動の結果を保存
+            await setTotalResults({
+              result: serverResult,
+              errors: errorResults,
+              successResults: successResults,
+              errorName: "serverError",
+              successName: "serverSuccess",
+            });
+          } catch (err) {
+            throw err;
+          }
+        }
+      } catch (err) {
+        throw err;
+      }
     }
 
     // エラー情報がある場合
-    else if (errorResults.length > 0) {
+    if (errorResults.length > 0) {
       // 収集したエラーリストをエラーオブジェクトに格納
       const error = await FileCreator.setTotalError(
         errorResults,
@@ -138,6 +155,19 @@ const createTest = async () => {
 
       throw error;
     }
+    // 成功時の処理
+    else {
+      // 結果の出力
+      console.log("最終結果：");
+      successResults.map((result, index) => {
+        console.log(
+          `${
+            result.successName ? result.successName : result.Promise.successName
+          }結果:`,
+          result.totalResult
+        );
+      });
+    }
   } catch (err) {
     // 関数の終点
     console.error("==========================================");
@@ -145,4 +175,4 @@ const createTest = async () => {
   }
 };
 
-createTest();
+const createResult = createTest();
