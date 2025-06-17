@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const argv = require("../option.js");
-const FileCreator = require("./FileCreator.js");
+const resultSystem = require("./resultSystem.js");
+const { createAll } = require("./FileCreator.js");
 
 // ==================================
 // HTML生成汎用メソッド
@@ -10,7 +11,6 @@ const FileCreator = require("./FileCreator.js");
 
 // HTMLのファイル生成
 const HtmlCreator = {
-  ...FileCreator,
 
   createHtml: async () => {
     const htmlName = argv.html; // HTMLファイル名
@@ -20,7 +20,7 @@ const HtmlCreator = {
     console.log("HTMLファイルの生成を開始します。");
 
     try {
-      const html = await FileCreator.createAll({
+      const html = await createAll({
         fileName: htmlName,
         targetExtension: htmlExt,
         fileContent: htmlContent,
@@ -28,7 +28,7 @@ const HtmlCreator = {
 
       const { addExtResult, createPathResult } = html;
 
-      const result = HtmlCreator.setResult({
+      const result = resultSystem.setResult({
         message: `${addExtResult.fileName}の生成に成功しました。`,
         totalResult: html,
         htmlName: addExtResult.fileName,
@@ -51,15 +51,17 @@ const HtmlCreator = {
 
       // CSSファイルの読み込みチェック
       if (htmlContent.includes(".css")) {
-        const result = HtmlCreator.setResult({
-          message: `${htmlFileName}には既に${cssFileName}が読み込まれています。\nこのまま処理を終了します。`,
-          htmlFileName: htmlFileName,
-          htmlPathName: htmlPath,
-          cssFileName: cssFileName,
-          htmlContent: htmlContent.slice(0, 50) + "...", // 先頭50文字を表示
+        const result = resultSystem.setResult({
+          totalResult: {
+            message: `${htmlFileName}には既に${cssFileName}が読み込まれています。\nこのまま処理を終了します。`,
+            htmlFileName: htmlFileName,
+            htmlPathName: htmlPath,
+            cssFileName: cssFileName,
+            htmlContent: htmlContent.slice(0, 50) + "...", // 先頭50文字を表示
+          },
         });
         console.log("===================================");
-        console.log(result.message);
+        console.log(result.totalResult.message);
         console.log("===================================");
         return result;
       }
@@ -76,7 +78,7 @@ const HtmlCreator = {
           encoding: "utf-8",
         });
 
-        const result = HtmlCreator.setResult({
+        const result = resultSystem.setResult({
           message: `${htmlFileName}に${cssFileName}の読み込みに成功しました。`,
           htmlFileName: htmlFileName,
           htmlPathName: htmlPath,

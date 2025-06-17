@@ -1,7 +1,6 @@
-const fs = require("node:fs");
 const argv = require("../option.js");
-const FileCreator = require("./FileCreator.js");
-const { css } = require("../datas/filesDefaultData.js");
+const resultSystem = require("./resultSystem.js");
+const { createAll } = require("./FileCreator.js");
 
 // ==================================
 // CSS生成汎用メソッド
@@ -11,7 +10,6 @@ const { css } = require("../datas/filesDefaultData.js");
 
 // CSSファイルの生成
 const CssCreator = {
-  ...FileCreator,
 
   createCss: async () => {
     const cssName = argv.css; // cssファイル名
@@ -21,7 +19,7 @@ const CssCreator = {
     console.log("CSSファイルの生成を開始します。");
 
     try {
-      const css = await FileCreator.createAll({
+      const css = await createAll({
         fileName: cssName,
         targetExtension: cssExt,
         fileContent: cssName === "style.css" ? cssContent : "",
@@ -29,7 +27,7 @@ const CssCreator = {
 
       const { addExtResult } = css;
 
-      const result = CssCreator.setResult({
+      const result = resultSystem.setResult({
         message: `${addExtResult.fileName}の生成に成功しました。`,
         totalResult: css,
         cssName: addExtResult.fileName,

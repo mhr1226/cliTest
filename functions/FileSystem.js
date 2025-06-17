@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const argv = require("../option.js");
 const handleErrorSystem = require("./handleErrorSystem.js");
+const resultSystem = require("./resultSystem.js");
 
 // ============================================
 // ファイル生成オリジナル
@@ -9,21 +10,12 @@ const handleErrorSystem = require("./handleErrorSystem.js");
 // FileSystemのメソッドを使用してファイルを生成する
 // ============================================
 const FileSystem = {
-
-  // エラーハンドリング用のメソッドをインポート
-  ...handleErrorSystem,
-  
-// 成功時のオブジェクトを保存
-  setResult: (result) => {
-    return result;
-  },
-
   // ファイルの入力チェック
   checkFileName: async (fileName) => {
     try {
       // ファイル名の入力チェック
       if (!fileName) {
-        throw FileSystem.setCustomErrorAll({
+        throw handleErrorSystem.setCustomErrorAll({
           source: "checkFileName",
           name: "InvalidFileNameError",
           message: "ファイル名が未指定、もしくは無効なファイル名です。",
@@ -37,7 +29,7 @@ const FileSystem = {
         fileName.includes("/") ||
         fileName.includes("\\")
       ) {
-        throw FileSystem.setCustomErrorAll({
+        throw handleErrorSystem.setCustomErrorAll({
           source: "checkFileName",
           name: "ReferenceError",
           message: "ファイル名に無効なパスが含まれています。",
@@ -45,7 +37,7 @@ const FileSystem = {
         });
       } else {
         // 成功時の処理
-        return FileSystem.setResult({
+        return resultSystem.setResult({
           message: `ファイルの入力チェックに成功しました。`,
           name: fileName,
         });
@@ -60,7 +52,7 @@ const FileSystem = {
     try {
       // dirに空文字列の場合にはエラーを返す
       if (!dir) {
-        throw FileSystem.setCustomErrorAll({
+        throw handleErrorSystem.setCustomErrorAll({
           source: "checkDir",
           name: "InvalidDirError",
           message: "ディレクトリ名が未指定、もしくは無効なディレクトリ名です。",
@@ -69,7 +61,7 @@ const FileSystem = {
       }
       // dirに危険な文字列が含まれているかをチェックする
       else if (dir.includes("../") || dir.includes("..\\")) {
-        throw FileSystem.setCustomErrorAll({
+        throw handleErrorSystem.setCustomErrorAll({
           source: "checkDir",
           name: "InvalidDirError",
           message: "ディレクトリ名に無効なパスが含まれています。",
@@ -77,7 +69,7 @@ const FileSystem = {
         });
       } else {
         // 成功時の処理
-        return FileSystem.setResult({
+        return resultSystem.setResult({
           message: `ディレクトリの入力チェックに成功しました。`,
           name: dir,
         });
@@ -91,7 +83,7 @@ const FileSystem = {
   checkExt: async (fileName) => {
     // 入力値の検証
     if (!fileName) {
-      throw FileSystem.setCustomErrorAll({
+      throw handleErrorSystem.setCustomErrorAll({
         source: "checkExt",
         name: "InvalidInputError",
         message: "ファイル名が未指定、もしくは無効です。",
@@ -104,7 +96,7 @@ const FileSystem = {
       const currentExt = path.extname(fileName);
 
       // 成功時の処理
-      return FileSystem.setResult({
+      return resultSystem.setResult({
         message: `${fileName}の拡張子を取得しました。`,
         name: currentExt,
       });
@@ -124,7 +116,7 @@ const FileSystem = {
       if (fileExt === targetExt) {
         // そのまま返す
 
-        return FileSystem.setResult({
+        return resultSystem.setResult({
           message: "拡張子は既に指定されています。このまま処理を続けます。",
           fileName: fileName,
           fileExt: fileExt,
@@ -139,7 +131,7 @@ const FileSystem = {
         const addExtFileName = `${fileName}${targetExt}`;
 
         // 成功時の処理
-        return FileSystem.setResult({
+        return resultSystem.setResult({
           message: `${targetExt}拡張子を追加しました。`,
           originalFileName: fileName,
           fileName: addExtFileName,
@@ -160,7 +152,7 @@ const FileSystem = {
       const pathResult = path.join(dir, fileName);
 
       // 成功時の処理
-      return FileSystem.setResult({
+      return resultSystem.setResult({
         message: `${fileName}のパスを生成しました。`,
         name: pathResult,
       });
@@ -176,7 +168,7 @@ const FileSystem = {
     try {
       await fs.promises.access(dir);
       // ディレクトリが存在する場合はそのまま処理を続ける
-      return FileSystem.setResult({
+      return resultSystem.setResult({
         message: "ディレクトリは既に作成されています。このまま処理を続けます。",
         dir: dir,
       });
@@ -214,7 +206,7 @@ const FileSystem = {
       await fs.promises.access(path);
 
       // ファイルが存在する場合
-      return FileSystem.setResult({
+      return resultSystem.setResult({
         message: `${fileName}は既に${dir}内に保存されています。このまま処理を終了します。`,
         path: path,
         fileName: fileName,
@@ -235,7 +227,7 @@ const FileSystem = {
           });
 
           // 成功時の処理
-          return FileSystem.setResult({
+          return resultSystem.setResult({
             message: `${fileName}を${dir}に保存しました。`,
             path: path,
             fileName: fileName,
