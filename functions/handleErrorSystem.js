@@ -84,8 +84,7 @@ const handleErrorSystem = {
       console.error("処理を中断し、途中までの結果を出力します。\n");
 
       console.error("===========================================");
-      console.error("途中結果：", err.results, "\n");
-      console.error("エラー詳細：\n", err);
+      console.error("途中結果：", err.results);
     });
   },
 };

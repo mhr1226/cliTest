@@ -1,5 +1,4 @@
-const fs = require("node:fs");
-const argv = require("../option.js");
+const resultSystem = require("./resultSystem.js");
 const FileSystem = require("./FileSystem.js");
 
 // ==================================
@@ -18,7 +17,7 @@ const FileCreator = {
 
       const extResult = await FileSystem.checkExt(fileResult.name);
 
-      return FileCreator.setResult({
+      return resultSystem.setResult({
         fileResult,
         extResult,
         dirResult,
@@ -43,7 +42,7 @@ const FileCreator = {
         fileName: addExtResult.fileName,
       });
 
-      return FileCreator.setResult({
+      return resultSystem.setResult({
         addExtResult,
         createPathResult,
       });
@@ -65,7 +64,7 @@ const FileCreator = {
         fileContent: fileContent,
       });
 
-      return FileCreator.setResult({
+      return resultSystem.setResult({
         createDirResult,
         createFileResult,
       });
@@ -88,8 +87,8 @@ const FileCreator = {
 
       // 結果の保存
       results = {
-        ...checkResults
-      }
+        ...checkResults,
+      };
 
       const { fileResult, extResult } = checkResults;
 
@@ -103,8 +102,8 @@ const FileCreator = {
       // 結果の保存
       results = {
         ...results,
-        ...addExtAndPathResult
-      }
+        ...addExtAndPathResult,
+      };
 
       const { addExtResult, createPathResult } = addExtAndPathResult;
 
@@ -118,8 +117,8 @@ const FileCreator = {
       // 結果の保存
       results = {
         ...results,
-        ...createFileAndDirResult
-      }
+        ...createFileAndDirResult,
+      };
       return results;
     } catch (err) {
       // エラー内容の出力と最終結果の出力

@@ -1,12 +1,12 @@
 const express = require("express");
 const argv = require("../option.js");
 const handleErrorSystem = require("./handleErrorSystem.js");
-const { setResult } = require("./FileSystem.js");
+const resultSystem = require("./resultSystem.js");
 const path = require("node:path");
 
 const serverSystem = {
   server: express(),
-  PORT: 3000,
+  PORT: process.env.PORT || 3000,
 
   // 開発用：ログ出力の設定
   setDevLog: () => {
@@ -25,10 +25,7 @@ const serverSystem = {
   },
 
   // レスポンス内容の設定メソッド
-  setResponseFile: ({
-    fileDir,
-    htmlFileName,
-  } = {}) => {
+  setResponseFile: ({ fileDir, htmlFileName } = {}) => {
     const { server } = serverSystem;
 
     // htmlファイルがデフォルト以外の場合
@@ -47,7 +44,7 @@ const serverSystem = {
 
   // サーバーの起動メソッド
   startServer: async ({ fileDir = argv.dir, htmlFileName = "index.html" }) => {
-    const { server } = serverSystem;
+    const { server, PORT } = serverSystem;
 
     try {
       // サーバーのログ出力設定
@@ -59,15 +56,17 @@ const serverSystem = {
       });
 
       // サーバーの起動
-      const listen = server.listen(serverSystem.PORT, () => {
-        console.log(`サーバーがポート${serverSystem.PORT}で起動しました。`);
+      const listen = server.listen(PORT, () => {
+        console.log(`サーバーがポート${PORT}で起動しました。`);
       });
 
-      return setResult({
-        message: `静的ファイルの配信に成功しました。`,
-        fileDir: fileDir,
-        htmlFileName: htmlFileName,
-        port: serverSystem.PORT,
+      return resultSystem.setResult({
+        totalResult: {
+          message: `サーバー起動に成功しました。`,
+          fileDir: fileDir,
+          htmlFileName: htmlFileName,
+          port: PORT,
+        },
       });
     } catch (err) {
       throw handleErrorSystem.setCustomErrorAll({

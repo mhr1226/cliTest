@@ -1,66 +1,10 @@
-const FileCreator = require("./functions/FileCreator.js");
+const handleErrorSystem = require("./functions/handleErrorSystem.js");
 const HtmlCreator = require("./functions/HtmlCreator.js");
 const CssCreator = require("./functions/CssCreator.js");
 const serverSystem = require("./functions/serverSystem.js");
-
-const argv = require("./option.js");
+const resultSystem = require("./functions/resultSystem.js");
 
 const createTest = async () => {
-  // 結果保存用のメソッド
-  const setTotalResults = async ({
-    result = {},
-    errors = [],
-    successResults = [],
-    errorName = null,
-    successName = null,
-  } = {}) => {
-    // 成功・失敗の結果を保存
-    const results = {
-      success: true,
-      successName: null,
-      totalResult: null,
-      successResults: successResults,
-      errors: errors,
-    };
-
-    // ============================
-    // 成功・失敗時の結果の保存処理
-    // ============================
-    // 引数resultの結果が失敗した場合
-    if (result.status === "rejected") {
-      // 途中結果の取得
-      results.totalResult = {
-        // createAllの結果を展開
-        ...result.reason.results,
-      };
-      // エラー情報の取得
-      const errorInfo = result.reason;
-      // エラー名の設定
-      errorInfo.errorName = errorName;
-
-      // エラーをリストに追加
-      results.errors.push(errorInfo);
-
-      results.success = false;
-      // 成功した場合
-    } else {
-      // 引数resultの内容の保存
-      results.totalResult = result.value
-        ? {
-            ...result.value.totalResult,
-          }
-        : {
-            ...result,
-          };
-      // 成功時の名前の設定
-      results.successName = successName;
-      // 成功した場合の結果をresultsに追加
-      results.successResults.push(results);
-    }
-
-    return results;
-  };
-
   // 結果保存用の配列
   const successResults = [];
 
@@ -79,14 +23,14 @@ const createTest = async () => {
       { success: htmlSuccess, totalResult: settledHtmlResult },
       { success: cssSuccess, totalResult: settledCssResult },
     ] = await Promise.all([
-      setTotalResults({
+      resultSystem.setTotalResults({
         result: htmlResult,
         errors: errorResults,
         successResults: successResults,
         errorName: "htmlError",
         successName: "htmlSuccess",
       }),
-      setTotalResults({
+      resultSystem.setTotalResults({
         result: cssResult,
         errors: errorResults,
         successResults: successResults,
@@ -98,60 +42,63 @@ const createTest = async () => {
     // HTML,CSSファイルの生成に成功した場合
     if (htmlSuccess && cssSuccess) {
       console.log("HTMLとCSSファイルの生成に成功しました。");
-      // 作成したCSSファイルをHTMLファイルに読み込む
 
-      try {
-        const loadCss = await HtmlCreator.loadCssToHtml({
+      // CSSファイルの読み込みとサーバーの起動
+      console.log("CSSファイルをHTMLに読み込み、サーバーを起動します。");
+      const [loadCssResult, startServerResult] = await Promise.allSettled([
+        // CSSファイルをHTMLに読み込む
+        HtmlCreator.loadCssToHtml({
           htmlFileName: settledHtmlResult.addExtResult.fileName,
           cssFileName: settledCssResult.addExtResult.fileName,
           htmlPath: settledHtmlResult.createPathResult.name,
-        });
-        // 結果の保存
-        const settledLoadCssResult = await setTotalResults({
-          result: loadCss,
-          errors: errorResults,
-          successResults: successResults,
-          errorName: "loadCssError",
-          successName: "loadCssSuccess",
-        });
+        }),
+        // サーバーの起動
+        serverSystem.startServer({
+          fileDir: settledHtmlResult.dirResult.dir,
+          htmlFileName: settledHtmlResult.addExtResult.fileName,
+        }),
+      ]);
 
-        if (settledLoadCssResult.success) {
-          console.log("CSSファイルの読み込みに成功しました。");
-          // サーバーの起動
-          console.log("サーバーを起動します。");
+      // 結果の保存
+      const [{ success: loadCssSuccess }, { success: serverSuccess }] =
+        await Promise.all([
+          resultSystem.setTotalResults({
+            result: loadCssResult,
+            errors: errorResults,
+            successResults: successResults,
+            errorName: "loadCssError",
+            successName: "loadCssSuccess",
+          }),
+          resultSystem.setTotalResults({
+            result: startServerResult,
+            errors: errorResults,
+            successResults: successResults,
+            errorName: "serverError",
+            successName: "serverSuccess",
+          }),
+        ]);
 
-          try {
-            const serverResult = await serverSystem.startServer({
-              fileDir: settledHtmlResult.dirResult.dir,
-              htmlFileName: settledHtmlResult.addExtResult.fileName,
-            });
-            // サーバー起動の結果を保存
-            await setTotalResults({
-              result: serverResult,
-              errors: errorResults,
-              successResults: successResults,
-              errorName: "serverError",
-              successName: "serverSuccess",
-            });
-          } catch (err) {
-            throw err;
-          }
-        }
-      } catch (err) {
-        throw err;
+      // 処理結果の出力
+      if (loadCssSuccess) {
+        console.log("CSSファイルの読み込みに成功しました。");
+      } else {
+        console.error("CSSファイルの読み込みに失敗しました。");
+      }
+
+      if (serverSuccess) {
+        console.log("サーバーの起動に成功しました。");
+      } else {
+        console.error("サーバーの起動に失敗しました。");
       }
     }
 
     // エラー情報がある場合
     if (errorResults.length > 0) {
       // 収集したエラーリストをエラーオブジェクトに格納
-      const error = await FileCreator.setTotalError(
-        errorResults,
-        "createTestError"
-      );
+      const error = await handleErrorSystem.setTotalError(errorResults, "createTestError");
 
       // エラー情報の出力
-      await FileCreator.setErrorLogs(error);
+      await handleErrorSystem.setErrorLogs(error);
 
       throw error;
     }
@@ -164,13 +111,15 @@ const createTest = async () => {
           `${
             result.successName ? result.successName : result.Promise.successName
           }結果:`,
-          result.totalResult
+          result.totalResult ? result.totalResult : result.Promise.totalResult
         );
       });
+      console.log("全ての処理が正常に完了しました。");
     }
   } catch (err) {
     // 関数の終点
     console.error("==========================================");
+    console.error(err);
     console.error("処理を終了します。");
   }
 };
